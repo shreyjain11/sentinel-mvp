@@ -1,96 +1,136 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 export default function DebugRedirectPage() {
-  const [oauthUrl, setOauthUrl] = useState<string>('')
-  const [origin, setOrigin] = useState<string>('')
+  const [redirectInfo, setRedirectInfo] = useState<any>(null)
 
   useEffect(() => {
-    setOrigin(window.location.origin)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const redirectTo = isLocalhost 
+      ? 'http://localhost:3000/auth/callback'
+      : `${window.location.origin}/auth/callback`
+
+    setRedirectInfo({
+      hostname: window.location.hostname,
+      origin: window.location.origin,
+      href: window.location.href,
+      isLocalhost,
+      redirectTo,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString()
+    })
   }, [])
 
-  const generateOAuthUrl = () => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    const redirectUri = `${origin}/auth/gmail/callback`
-    
-    const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-    url.searchParams.set('client_id', clientId!)
-    url.searchParams.set('redirect_uri', redirectUri)
-    url.searchParams.set('scope', 'https://www.googleapis.com/auth/gmail.readonly')
-    url.searchParams.set('response_type', 'code')
-    url.searchParams.set('access_type', 'offline')
-    url.searchParams.set('prompt', 'consent')
-    
-    setOauthUrl(url.toString())
+  const testOAuthRedirect = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const redirectTo = isLocalhost 
+        ? 'http://localhost:3000/auth/callback'
+        : `${window.location.origin}/auth/callback`
+
+      console.log('Testing OAuth redirect with:', redirectTo)
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        console.error('OAuth error:', error)
+        alert(`OAuth Error: ${error.message}`)
+      } else {
+        console.log('OAuth initiated:', data)
+        alert('OAuth initiated successfully! Check the console for details.')
+      }
+    } catch (error) {
+      console.error('Test error:', error)
+      alert(`Test Error: ${error}`)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>OAuth Redirect URI Debug</CardTitle>
-            <CardDescription>
-              Check exactly what redirect URI your app is using
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            
-            <div className="grid grid-cols-1 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-medium text-blue-900 mb-2">Current Configuration</h3>
-                <div className="space-y-2 text-sm">
-                  <div><strong>Origin:</strong> {origin || 'Loading...'}</div>
-                  <div><strong>Redirect URI:</strong> {origin ? `${origin}/auth/gmail/callback` : 'Loading...'}</div>
-                  <div><strong>Client ID:</strong> {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.substring(0, 30)}...</div>
-                  <div><strong>App URL from env:</strong> {process.env.NEXT_PUBLIC_APP_URL}</div>
-                </div>
-              </div>
-
-              <Button onClick={generateOAuthUrl}>
-                Generate OAuth URL
-              </Button>
-
-              {oauthUrl && (
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <h3 className="font-medium text-green-900 mb-2">Generated OAuth URL</h3>
-                  <p className="text-sm text-green-800 break-all mb-4">{oauthUrl}</p>
-                  <Button 
-                    onClick={() => window.open(oauthUrl, '_blank')}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Test OAuth URL
-                  </Button>
-                </div>
-              )}
-
-              <div className="p-4 bg-yellow-50 rounded-lg">
-                <h3 className="font-medium text-yellow-900 mb-2">Google Cloud Console Setup</h3>
-                <div className="text-sm text-yellow-800 space-y-2">
-                  <p><strong>Add these redirect URIs to Google Cloud Console:</strong></p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li><code>{origin}/auth/gmail/callback</code></li>
-                    <li><code>{origin}/auth/callback</code></li>
-                  </ul>
-                  <p className="mt-4"><strong>Steps:</strong></p>
-                  <ol className="list-decimal list-inside ml-4 space-y-1">
-                    <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
-                    <li>Navigate to "APIs & Services" → "Credentials"</li>
-                    <li>Find your OAuth 2.0 Client ID</li>
-                    <li>Click "Edit" (pencil icon)</li>
-                    <li>Add the redirect URIs above to "Authorized redirect URIs"</li>
-                    <li>Click "Save"</li>
-                  </ol>
-                </div>
-              </div>
+    <div className="container mx-auto p-6 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-6">OAuth Redirect Debug</h1>
+      
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Current Environment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {redirectInfo ? (
+            <div className="space-y-2">
+              <div><strong>Hostname:</strong> {redirectInfo.hostname}</div>
+              <div><strong>Origin:</strong> {redirectInfo.origin}</div>
+              <div><strong>Full URL:</strong> {redirectInfo.href}</div>
+              <div><strong>Is Localhost:</strong> {redirectInfo.isLocalhost ? 'Yes' : 'No'}</div>
+              <div><strong>Redirect To:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{redirectInfo.redirectTo}</code></div>
+              <div><strong>User Agent:</strong> <code className="text-xs bg-gray-100 px-2 py-1 rounded block">{redirectInfo.userAgent}</code></div>
+              <div><strong>Timestamp:</strong> {redirectInfo.timestamp}</div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <div>Loading...</div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Environment Variables</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div><strong>NEXT_PUBLIC_SUPABASE_URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET'}</div>
+            <div><strong>NEXT_PUBLIC_APP_URL:</strong> {process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'}</div>
+            <div><strong>NEXT_PUBLIC_GOOGLE_CLIENT_ID:</strong> {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'}</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Test OAuth Redirect</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={testOAuthRedirect} className="w-full">
+            Test Google OAuth Redirect
+          </Button>
+          <p className="text-sm text-gray-600 mt-2">
+            This will initiate the OAuth flow and show you exactly where it's trying to redirect.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Troubleshooting Steps</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ol className="list-decimal list-inside space-y-2">
+            <li>Check if the "Redirect To" URL above matches what you added to Google Cloud Console</li>
+            <li>Make sure you added these URLs to Google Cloud Console OAuth settings:
+              <ul className="list-disc list-inside ml-4 mt-1">
+                <li><code>https://sentinel-mvp.vercel.app/auth/callback</code></li>
+                <li><code>https://sentinel-mvp.vercel.app/auth/gmail/callback</code></li>
+                <li><code>https://sentinel-mvp.vercel.app/auth/calendar/callback</code></li>
+              </ul>
+            </li>
+            <li>Clear your browser cache and cookies</li>
+            <li>Try in an incognito/private window</li>
+            <li>Check the browser console for any error messages</li>
+          </ol>
+        </CardContent>
+      </Card>
     </div>
   )
 } 
