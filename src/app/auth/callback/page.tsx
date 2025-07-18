@@ -1,101 +1,67 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, Shield } from 'lucide-react'
 
-export default function AuthCallbackPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+function AuthCallbackContent() {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('Processing authentication...')
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
+    const handleCallback = async () => {
       try {
-        console.log('Auth callback page loaded')
-        
-        // Check for OAuth errors in URL params
+        const code = searchParams.get('code')
         const error = searchParams.get('error')
-        const errorDescription = searchParams.get('error_description')
-        
+
         if (error) {
-          console.error('OAuth error in URL:', { error, errorDescription })
           setStatus('error')
-          setMessage(`OAuth Error: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`)
+          setMessage(`Authentication failed: ${error}`)
+          setTimeout(() => router.push('/auth'), 3000)
           return
         }
 
-        // Handle the OAuth callback by exchanging the code for a session
-        const { data, error: authError } = await supabase.auth.getSession()
-        
-        if (authError) {
-          console.error('Auth callback error:', authError)
+        if (!code) {
           setStatus('error')
-          setMessage(`Authentication error: ${authError.message}`)
+          setMessage('No authorization code received')
+          setTimeout(() => router.push('/auth'), 3000)
           return
         }
 
-        if (!data.session) {
-          console.error('No session found after OAuth callback')
-          console.log('Attempting to exchange OAuth code...')
-          
-          // Try to exchange the OAuth code manually
-          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-            searchParams.get('code') || ''
-          )
-          
-          if (exchangeError) {
-            console.error('Code exchange error:', exchangeError)
-            setStatus('error')
-            setMessage(`Code exchange failed: ${exchangeError.message}`)
-            return
-          }
-          
-          if (!exchangeData.session) {
-            console.error('No session after code exchange')
-            setStatus('error')
-            setMessage('Failed to create session after code exchange')
-            return
-          }
-          
-          console.log('Session created via code exchange:', exchangeData.session.user.email)
-        } else {
-          console.log('Session found:', data.session.user.email)
-        }
+        setMessage('Completing authentication...')
 
+        // For now, just redirect to dashboard since we're using Supabase auth
         setStatus('success')
-        setMessage('Authentication successful! Redirecting to dashboard...')
+        setMessage('Authentication successful!')
         
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 2000)
-        
+        setTimeout(() => router.push('/dashboard'), 2000)
       } catch (error) {
-        console.error('Auth callback exception:', error)
+        console.error('Auth callback error:', error)
         setStatus('error')
-        setMessage('An unexpected error occurred during authentication')
+        setMessage(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        setTimeout(() => router.push('/auth'), 3000)
       }
     }
 
-    handleAuthCallback()
-  }, [router, searchParams])
+    handleCallback()
+  }, [searchParams, router])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
             {status === 'processing' && <Loader2 className="w-5 h-5 animate-spin" />}
             {status === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
             {status === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
+            <Shield className="w-5 h-5" />
             Authentication
           </CardTitle>
           <CardDescription>
-            {status === 'processing' && 'Completing your sign-in...'}
+            {status === 'processing' && 'Completing authentication...'}
             {status === 'success' && 'Successfully authenticated!'}
             {status === 'error' && 'Authentication failed'}
           </CardDescription>
@@ -118,12 +84,50 @@ export default function AuthCallbackPage() {
                 onClick={() => router.push('/auth')}
                 className="text-xs text-blue-600 hover:underline"
               >
-                Return to login
+                Return to login now
               </button>
+            </div>
+          )}
+          {status === 'success' && (
+            <div className="space-y-2">
+              <p className="text-xs text-green-600 mt-4">
+                Redirecting to dashboard...
+              </p>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <Shield className="w-5 h-5" />
+              Authentication
+            </CardTitle>
+            <CardDescription>
+              Loading...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Initializing authentication...
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '30%' }}></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   )
 } 

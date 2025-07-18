@@ -1,93 +1,85 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { GmailService } from '@/lib/gmail'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, Mail } from 'lucide-react'
 
-export default function GmailCallbackPage() {
-  const searchParams = useSearchParams()
+function GmailCallbackContent() {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('Processing Gmail authorization...')
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
         const code = searchParams.get('code')
-        const state = searchParams.get('state')
         const error = searchParams.get('error')
 
         if (error) {
-          throw new Error(`OAuth error: ${error}`)
+          setStatus('error')
+          setMessage(`Authorization failed: ${error}`)
+          setTimeout(() => router.push('/dashboard'), 3000)
+          return
         }
 
-        if (!code || !state) {
-          throw new Error('Missing authorization code or state parameter')
+        if (!code) {
+          setStatus('error')
+          setMessage('No authorization code received')
+          setTimeout(() => router.push('/dashboard'), 3000)
+          return
         }
 
-        // First check if we have a valid session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError)
-          throw new Error(`Session error: ${sessionError.message}`)
-        }
+        setMessage('Exchanging authorization code for tokens...')
 
-        if (!session) {
-          console.error('No session found during Gmail callback')
-          throw new Error('No active session found. Please log in again.')
-        }
-
-        console.log('Session found:', {
-          userId: session.user.id,
-          email: session.user.email
+        // Exchange the code for tokens
+        const response = await fetch('/api/gmail/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code }),
         })
 
-        setMessage('Exchanging authorization code for access tokens...')
+        const result = await response.json()
 
-        // Exchange code for tokens
-        const success = await GmailService.handleOAuthCallback(code, state)
-
-        if (success) {
+        if (response.ok) {
           setStatus('success')
-          setMessage('Gmail connected successfully! Redirecting to dashboard...')
+          setMessage('Gmail connected successfully! You can now parse your emails for subscriptions.')
           
-          // Redirect to dashboard after a short delay
-          setTimeout(() => {
-            window.location.href = '/dashboard'
-          }, 2000)
+          // Redirect to dashboard with success parameter
+          setTimeout(() => router.push('/dashboard?gmail=connected'), 2000)
         } else {
-          throw new Error('Failed to exchange authorization code')
+          const errorMessage = result.error || 'Token exchange failed'
+          const errorDetails = result.details ? ` (${result.details})` : ''
+          const errorCode = result.code ? ` [Code: ${result.code}]` : ''
+          throw new Error(`${errorMessage}${errorDetails}${errorCode}`)
         }
       } catch (error) {
-        console.error('Gmail OAuth callback error:', error)
+        console.error('Gmail callback error:', error)
         setStatus('error')
-        setMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
-        
-        // Redirect to dashboard after error display
-        setTimeout(() => {
-          window.location.href = '/dashboard'
-        }, 5000)
+        setMessage(`Failed to connect Gmail: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        setTimeout(() => router.push('/dashboard'), 3000)
       }
     }
 
     handleCallback()
-  }, [searchParams])
+  }, [searchParams, router])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
             {status === 'processing' && <Loader2 className="w-5 h-5 animate-spin" />}
             {status === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
             {status === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
+            <Mail className="w-5 h-5" />
             Gmail Authorization
           </CardTitle>
           <CardDescription>
-            {status === 'processing' && 'Connecting your Gmail account...'}
+            {status === 'processing' && 'Connecting your Gmail...'}
             {status === 'success' && 'Successfully connected!'}
             {status === 'error' && 'Connection failed'}
           </CardDescription>
@@ -98,7 +90,7 @@ export default function GmailCallbackPage() {
           </p>
           {status === 'processing' && (
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+              <div className="bg-red-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
             </div>
           )}
           {status === 'error' && (
@@ -107,15 +99,53 @@ export default function GmailCallbackPage() {
                 You will be redirected to the dashboard in a few seconds...
               </p>
               <button 
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => router.push('/dashboard')}
                 className="text-xs text-blue-600 hover:underline"
               >
                 Return to dashboard now
               </button>
             </div>
           )}
+          {status === 'success' && (
+            <div className="space-y-2">
+              <p className="text-xs text-green-600 mt-4">
+                Redirecting to dashboard...
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function GmailCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <Mail className="w-5 h-5" />
+              Gmail Authorization
+            </CardTitle>
+            <CardDescription>
+              Loading...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Initializing Gmail connection...
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-red-600 h-2 rounded-full animate-pulse" style={{ width: '30%' }}></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <GmailCallbackContent />
+    </Suspense>
   )
 } 

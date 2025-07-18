@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, CheckCircle, XCircle, Calendar } from 'lucide-react'
 
-export default function CalendarCallbackPage() {
+function CalendarCallbackContent() {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('Processing calendar authorization...')
   const router = useRouter()
@@ -119,5 +119,36 @@ export default function CalendarCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function CalendarCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <Calendar className="w-5 h-5" />
+              Calendar Authorization
+            </CardTitle>
+            <CardDescription>
+              Loading...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Initializing calendar connection...
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '30%' }}></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <CalendarCallbackContent />
+    </Suspense>
   )
 } 
