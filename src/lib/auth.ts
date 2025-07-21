@@ -5,8 +5,11 @@ export async function signInWithGoogle() {
   try {
     console.log('Starting Supabase Google OAuth...')
     
-    // Use environment variable for consistent redirect URI
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+    // Determine the correct redirect URI based on current environment
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const baseUrl = isLocalhost 
+      ? (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+      : window.location.origin
     const redirectTo = `${baseUrl}/auth/callback`
     
     console.log('Using redirect URI:', redirectTo)
