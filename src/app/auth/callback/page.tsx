@@ -23,35 +23,43 @@ function AuthCallbackContent() {
           return
         }
 
-        // For Supabase OAuth, we don't need to handle the code manually
-        // Supabase handles the token exchange automatically
-        // We just need to check if we have a session
         setMessage('Completing authentication...')
 
-        // Import supabase and check for session
+        // Import supabase
         const { supabase } = await import('@/lib/supabase')
         
-        // Wait a moment for Supabase to process the OAuth response
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Let Supabase handle the OAuth response automatically
+        // It should detect the session in the URL and process it
+        const { data, error: authError } = await supabase.auth.getSession()
         
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError)
+        if (authError) {
+          console.error('Auth error:', authError)
           setStatus('error')
-          setMessage(`Session error: ${sessionError.message}`)
+          setMessage(`Authentication error: ${authError.message}`)
           setTimeout(() => router.push('/auth'), 3000)
           return
         }
 
-        if (session) {
+        if (data.session) {
+          console.log('Session found:', data.session.user.email)
           setStatus('success')
           setMessage('Authentication successful!')
           setTimeout(() => router.push('/dashboard'), 2000)
         } else {
-          setStatus('error')
-          setMessage('No session found after authentication')
-          setTimeout(() => router.push('/auth'), 3000)
+          // Try to get user info as a fallback
+          const { data: { user }, error: userError } = await supabase.auth.getUser()
+          
+          if (user && !userError) {
+            console.log('User found:', user.email)
+            setStatus('success')
+            setMessage('Authentication successful!')
+            setTimeout(() => router.push('/dashboard'), 2000)
+          } else {
+            console.error('No session or user found')
+            setStatus('error')
+            setMessage('No session found after authentication. Please try again.')
+            setTimeout(() => router.push('/auth'), 3000)
+          }
         }
       } catch (error) {
         console.error('Auth callback error:', error)
