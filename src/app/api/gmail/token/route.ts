@@ -66,12 +66,11 @@ export async function POST(request: NextRequest) {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
     
-    // Get the redirect URI from the request headers to match what was used in OAuth initiation
-    const host = request.headers.get('host') || 'localhost:3000'
-    const protocol = host.includes('localhost') ? 'http' : 'https'
+    // Use the environment variable for the base URL to ensure consistency
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const redirectUri = isCalendarScope 
-      ? `${protocol}://${host}/auth/calendar/callback`
-      : `${protocol}://${host}/auth/gmail/callback`
+      ? `${baseUrl}/auth/calendar/callback`
+      : `${baseUrl}/auth/gmail/callback`
 
     if (!clientId || !clientSecret) {
       return NextResponse.json({ error: 'Google OAuth not configured' }, { status: 500 })
@@ -81,7 +80,7 @@ export async function POST(request: NextRequest) {
       clientIdExists: !!clientId,
       clientSecretExists: !!clientSecret,
       redirectUri,
-      host,
+      baseUrl,
       codeLength: code?.length || 0,
       userId: session.user.id
     })
