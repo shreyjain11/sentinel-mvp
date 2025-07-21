@@ -14,9 +14,8 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const code = searchParams.get('code')
+        // Check for error first
         const error = searchParams.get('error')
-
         if (error) {
           setStatus('error')
           setMessage(`Authentication failed: ${error}`)
@@ -24,20 +23,36 @@ function AuthCallbackContent() {
           return
         }
 
-        if (!code) {
+        // For Supabase OAuth, we don't need to handle the code manually
+        // Supabase handles the token exchange automatically
+        // We just need to check if we have a session
+        setMessage('Completing authentication...')
+
+        // Import supabase and check for session
+        const { supabase } = await import('@/lib/supabase')
+        
+        // Wait a moment for Supabase to process the OAuth response
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError)
           setStatus('error')
-          setMessage('No authorization code received')
+          setMessage(`Session error: ${sessionError.message}`)
           setTimeout(() => router.push('/auth'), 3000)
           return
         }
 
-        setMessage('Completing authentication...')
-
-        // For now, just redirect to dashboard since we're using Supabase auth
-        setStatus('success')
-        setMessage('Authentication successful!')
-        
-        setTimeout(() => router.push('/dashboard'), 2000)
+        if (session) {
+          setStatus('success')
+          setMessage('Authentication successful!')
+          setTimeout(() => router.push('/dashboard'), 2000)
+        } else {
+          setStatus('error')
+          setMessage('No session found after authentication')
+          setTimeout(() => router.push('/auth'), 3000)
+        }
       } catch (error) {
         console.error('Auth callback error:', error)
         setStatus('error')
