@@ -1,7 +1,10 @@
 import { supabase } from './supabase'
 
 // Gmail OAuth configuration
-const GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+const GMAIL_SCOPES = [
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/calendar'
+]
 const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1'
 
 export interface GmailEmail {

@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
 
     // Check if the scope includes calendar access
     const hasCalendarScope = tokens.scope && 
-      tokens.scope.includes('https://www.googleapis.com/auth/calendar')
+      (tokens.scope.includes('https://www.googleapis.com/auth/calendar') ||
+       tokens.scope.includes('https://www.googleapis.com/auth/calendar.events'))
 
     // Check if token is not expired (with some buffer)
     const isTokenValid = tokens.expires_at && 

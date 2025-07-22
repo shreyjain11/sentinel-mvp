@@ -50,15 +50,15 @@ function AuthCallbackContent() {
           // Let Supabase handle the OAuth response automatically
           // This should process the hash fragment and establish the session
           const { data: { session }, error: authError } = await supabase.auth.getSession()
-          
-          if (authError) {
+        
+        if (authError) {
             addDebugInfo(`Auth error: ${authError.message}`)
-            console.error('Auth error:', authError)
-            setStatus('error')
-            setMessage(`Authentication error: ${authError.message}`)
-            setTimeout(() => router.push('/auth'), 3000)
-            return
-          }
+          console.error('Auth error:', authError)
+          setStatus('error')
+          setMessage(`Authentication error: ${authError.message}`)
+          setTimeout(() => router.push('/auth'), 3000)
+          return
+        }
 
           if (session) {
             addDebugInfo(`Session established successfully: ${session.user.email}`)
