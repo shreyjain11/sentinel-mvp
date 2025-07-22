@@ -78,6 +78,24 @@ export default function DebugEnvPage() {
     }
   }
 
+  const testSetSession = async () => {
+    try {
+      // Test with a dummy token to see if the API key is valid
+      const { data, error } = await supabase.auth.setSession({
+        access_token: 'dummy_token',
+        refresh_token: 'dummy_refresh_token',
+      })
+
+      if (error) {
+        alert(`setSession error: ${error.message}`)
+      } else {
+        alert('setSession call succeeded (but with dummy token)')
+      }
+    } catch (error) {
+      alert(`setSession exception: ${error}`)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -147,12 +165,15 @@ export default function DebugEnvPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Test Authentication</CardTitle>
-            <CardDescription>Test the OAuth flow</CardDescription>
+            <CardTitle>Test Functions</CardTitle>
+            <CardDescription>Test various authentication functions</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             <Button onClick={testAuth} className="w-full">
               Test Google OAuth
+            </Button>
+            <Button onClick={testSetSession} className="w-full" variant="outline">
+              Test setSession (with dummy token)
             </Button>
           </CardContent>
         </Card>
@@ -175,6 +196,29 @@ export default function DebugEnvPage() {
               <div className="p-2 bg-yellow-100 rounded">
                 <strong>Expected in Supabase:</strong><br />
                 <code className="text-sm">https://sentinel-mvp.vercel.app/auth/callback</code>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Supabase Configuration</CardTitle>
+            <CardDescription>Check Supabase client configuration</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="p-2 bg-gray-100 rounded">
+                <strong>Supabase URL:</strong><br />
+                <code className="text-sm">{process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET'}</code>
+              </div>
+              <div className="p-2 bg-gray-100 rounded">
+                <strong>Supabase Anon Key:</strong><br />
+                <code className="text-sm">
+                  {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
+                    ? `${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20)}...` 
+                    : 'NOT SET'}
+                </code>
               </div>
             </div>
           </CardContent>
