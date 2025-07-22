@@ -311,12 +311,11 @@ export class CalendarServerService {
 
       const userId = session.user.id
 
-      // Get all confirmed subscriptions without calendar events
+      // Get all subscriptions without calendar events (including manual ones)
       const { data: subscriptions, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', userId)
-        .eq('status', 'active')
         .is('calendar_event_id', null)
 
       if (error) {

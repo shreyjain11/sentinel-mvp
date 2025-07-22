@@ -41,6 +41,7 @@ export default function DebugCalendarPage() {
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null)
   const [calendarStatus, setCalendarStatus] = useState<CalendarStatus | null>(null)
   const [userInfo, setUserInfo] = useState<any>(null)
+  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null)
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = (message: string) => {
@@ -86,6 +87,16 @@ export default function DebugCalendarPage() {
         addDebugLog(`Calendar status: ${calendarData.connected ? 'Connected' : 'Not connected'}`)
       } else {
         addDebugLog(`Failed to load calendar status: ${calendarResponse.status}`)
+      }
+
+      // Get subscription info
+      const subscriptionResponse = await fetch('/api/debug/subscriptions')
+      if (subscriptionResponse.ok) {
+        const subscriptionData = await subscriptionResponse.json()
+        setSubscriptionInfo(subscriptionData)
+        addDebugLog(`Subscriptions loaded: ${subscriptionData.analysis.total} total, ${subscriptionData.analysis.eligibleForSync} eligible for sync`)
+      } else {
+        addDebugLog(`Failed to load subscriptions: ${subscriptionResponse.status}`)
       }
 
     } catch (error) {
@@ -335,6 +346,64 @@ export default function DebugCalendarPage() {
               </div>
             ) : (
               <p className="text-red-600">No calendar status available</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Subscription Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Database className="w-5 h-5" />
+              <span>Subscription Analysis</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {subscriptionInfo ? (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Total Subscriptions:</span>
+                  <Badge variant="outline">{subscriptionInfo.analysis.total}</Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Active Subscriptions:</span>
+                  <Badge variant="outline">{subscriptionInfo.analysis.active}</Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">With Calendar Events:</span>
+                  <Badge variant="outline">{subscriptionInfo.analysis.withCalendarEvents}</Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Without Calendar Events:</span>
+                  <Badge variant="outline">{subscriptionInfo.analysis.withoutCalendarEvents}</Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">With Renewal Dates:</span>
+                  <Badge variant="outline">{subscriptionInfo.analysis.withRenewalDates}</Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Eligible for Sync:</span>
+                  <Badge variant={subscriptionInfo.analysis.eligibleForSync > 0 ? "default" : "destructive"}>
+                    {subscriptionInfo.analysis.eligibleForSync}
+                  </Badge>
+                </div>
+                {subscriptionInfo.subscriptions.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Subscription Details:</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {subscriptionInfo.subscriptions.map((sub: any, index: number) => (
+                        <div key={index} className="text-xs bg-gray-100 p-2 rounded">
+                          <div><strong>{sub.name}</strong> - {sub.status}</div>
+                          <div>Renewal: {sub.renewal_date || 'None'}</div>
+                          <div>Calendar Event: {sub.calendar_event_id ? 'Yes' : 'No'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-red-600">No subscription information available</p>
             )}
           </CardContent>
         </Card>

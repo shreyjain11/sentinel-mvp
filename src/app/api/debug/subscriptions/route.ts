@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createSupabaseServerClient(request)
     const { data: { session } } = await supabase.auth.getSession()
+    
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -18,44 +19,38 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching subscriptions:', error)
-      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Failed to fetch subscriptions',
+        details: error.message
+      }, { status: 500 })
     }
 
-    // Get user's tokens
-    const { data: tokens } = await supabase
-      .from('gmail_tokens')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single()
+    // Analyze subscriptions for sync
+    const analysis = {
+      total: subscriptions?.length || 0,
+      active: subscriptions?.filter(s => s.status === 'active').length || 0,
+      withCalendarEvents: subscriptions?.filter(s => s.calendar_event_id).length || 0,
+      withoutCalendarEvents: subscriptions?.filter(s => !s.calendar_event_id).length || 0,
+      withRenewalDates: subscriptions?.filter(s => s.renewal_date).length || 0,
+      withTrialEndDates: subscriptions?.filter(s => s.trial_end_date).length || 0,
+      eligibleForSync: subscriptions?.filter(s => 
+        s.status === 'active' && 
+        !s.calendar_event_id && 
+        (s.renewal_date || s.trial_end_date)
+      ).length || 0
+    }
 
     return NextResponse.json({
-      success: true,
-      user: {
-        id: session.user.id,
-        email: session.user.email
-      },
       subscriptions: subscriptions || [],
-      subscriptionCount: subscriptions?.length || 0,
-      tokens: tokens ? {
-        hasAccessToken: !!tokens.access_token,
-        hasRefreshToken: !!tokens.refresh_token,
-        scope: tokens.scope,
-        expiresAt: tokens.expires_at,
-        hasCalendarScope: tokens.scope?.includes('https://www.googleapis.com/auth/calendar')
-      } : null,
-      databaseInfo: {
-        hasCalendarFields: subscriptions?.[0] ? {
-          calendar_event_id: 'calendar_event_id' in subscriptions[0],
-          calendar_id: 'calendar_id' in subscriptions[0]
-        } : null
-      }
+      analysis,
+      syncEligible: analysis.eligibleForSync > 0
     })
 
   } catch (error) {
-    console.error('Error in debug subscriptions endpoint:', error)
+    console.error('Error getting subscriptions:', error)
     return NextResponse.json({ 
-      error: 'Internal server error',
-      message: 'Failed to get debug info'
+      error: 'Failed to get subscriptions',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 } 
