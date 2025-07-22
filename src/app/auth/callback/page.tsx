@@ -28,38 +28,63 @@ function AuthCallbackContent() {
         // Import supabase
         const { supabase } = await import('@/lib/supabase')
         
-        // Let Supabase handle the OAuth response automatically
-        // It should detect the session in the URL and process it
-        const { data, error: authError } = await supabase.auth.getSession()
+        // Check if we have a hash fragment with access_token (OAuth response)
+        const hash = window.location.hash
+        if (hash) {
+          console.log('Processing OAuth hash fragment...')
+          // Let Supabase handle the OAuth response
+          const { data: { session }, error: authError } = await supabase.auth.getSession()
+          
+          if (authError) {
+            console.error('Auth error:', authError)
+            setStatus('error')
+            setMessage(`Authentication error: ${authError.message}`)
+            setTimeout(() => router.push('/auth'), 3000)
+            return
+          }
+
+          if (session) {
+            console.log('Session found:', session.user.email)
+            setStatus('success')
+            setMessage('Authentication successful!')
+            setTimeout(() => router.push('/dashboard'), 2000)
+            return
+          }
+        }
+
+        // Check for error parameters
+        const errorParam = searchParams.get('error')
+        const errorDescription = searchParams.get('error_description')
         
-        if (authError) {
-          console.error('Auth error:', authError)
+        if (errorParam) {
+          console.error('OAuth error:', errorParam, errorDescription)
           setStatus('error')
-          setMessage(`Authentication error: ${authError.message}`)
+          setMessage(`Authentication failed: ${errorDescription || errorParam}`)
           setTimeout(() => router.push('/auth'), 3000)
           return
         }
 
-        if (data.session) {
-          console.log('Session found:', data.session.user.email)
+        // Try to get existing session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setStatus('error')
+          setMessage(`Session error: ${sessionError.message}`)
+          setTimeout(() => router.push('/auth'), 3000)
+          return
+        }
+
+        if (session) {
+          console.log('Existing session found:', session.user.email)
           setStatus('success')
           setMessage('Authentication successful!')
           setTimeout(() => router.push('/dashboard'), 2000)
         } else {
-          // Try to get user info as a fallback
-          const { data: { user }, error: userError } = await supabase.auth.getUser()
-          
-          if (user && !userError) {
-            console.log('User found:', user.email)
-            setStatus('success')
-            setMessage('Authentication successful!')
-            setTimeout(() => router.push('/dashboard'), 2000)
-          } else {
-            console.error('No session or user found')
-            setStatus('error')
-            setMessage('No session found after authentication. Please try again.')
-            setTimeout(() => router.push('/auth'), 3000)
-          }
+          console.error('No session found')
+          setStatus('error')
+          setMessage('No session found after authentication. Please try again.')
+          setTimeout(() => router.push('/auth'), 3000)
         }
       } catch (error) {
         console.error('Auth callback error:', error)
