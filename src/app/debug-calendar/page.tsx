@@ -176,6 +176,40 @@ export default function DebugCalendarPage() {
     setDebugLogs([])
   }
 
+  const updateRenewalDate = async (subscriptionId: string, renewalDate: string) => {
+    try {
+      addDebugLog(`Updating renewal date for subscription ${subscriptionId} to ${renewalDate}`)
+      
+      const response = await fetch('/api/debug/update-renewal-dates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subscriptionId,
+          renewalDate
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        addDebugLog(`✅ Renewal date updated successfully`)
+        
+        // Refresh subscription info
+        const subscriptionResponse = await fetch('/api/debug/subscriptions')
+        if (subscriptionResponse.ok) {
+          const subscriptionData = await subscriptionResponse.json()
+          setSubscriptionInfo(subscriptionData)
+        }
+      } else {
+        const error = await response.json()
+        addDebugLog(`❌ Failed to update renewal date: ${error.message}`)
+      }
+    } catch (error) {
+      addDebugLog(`❌ Error updating renewal date: ${error}`)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-4">
@@ -396,6 +430,20 @@ export default function DebugCalendarPage() {
                           <div><strong>{sub.name}</strong> - {sub.status}</div>
                           <div>Renewal: {sub.renewal_date || 'None'}</div>
                           <div>Calendar Event: {sub.calendar_event_id ? 'Yes' : 'No'}</div>
+                          {!sub.renewal_date && (
+                            <div className="mt-2">
+                              <input
+                                type="date"
+                                className="text-xs border rounded px-1 py-1 w-full"
+                                placeholder="Set renewal date"
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    updateRenewalDate(sub.id, e.target.value)
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
