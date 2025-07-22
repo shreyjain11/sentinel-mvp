@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Shield, ArrowLeft, Calendar as CalendarIcon, RefreshCw, CheckCircle, Clock, AlertTriangle, RefreshCcw } from "lucide-react"
+import { Shield, ArrowLeft, Calendar as CalendarIcon, RefreshCw, CheckCircle, Clock, AlertTriangle, RefreshCcw, CreditCard, Bell } from "lucide-react"
 import Link from "next/link"
 import { CalendarService, CalendarEvent } from '@/lib/calendar'
 import { formatCurrency } from '@/lib/utils'
@@ -14,6 +14,7 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   useEffect(() => {
     checkCalendarStatus()
@@ -36,6 +37,10 @@ export default function CalendarPage() {
       const connected = await CalendarService.isCalendarConnected()
       console.log('Calendar connection status:', connected)
       setCalendarConnected(connected)
+      // Reload events when status changes
+      if (connected) {
+        await loadEvents()
+      }
     } catch (error) {
       console.error('Error checking calendar status:', error)
     } finally {
@@ -46,17 +51,17 @@ export default function CalendarPage() {
   const refreshStatus = async () => {
     setLoading(true)
     await checkCalendarStatus()
-    if (calendarConnected) {
-      await loadEvents()
-    }
+    await loadEvents()
   }
 
   const loadEvents = async () => {
     try {
       const upcomingEvents = await CalendarService.getUpcomingEvents()
+      console.log('Loaded upcoming events:', upcomingEvents)
       setEvents(upcomingEvents)
     } catch (error) {
       console.error('Error loading events:', error)
+      setEvents([])
     }
   }
 
@@ -74,11 +79,34 @@ export default function CalendarPage() {
   const syncToCalendar = async () => {
     try {
       setSyncing(true)
-      const result = await CalendarService.syncAllSubscriptions()
-      console.log(`✅ Synced ${result.success} events to Google Calendar`)
+      setSyncError(null)
+      
+      const response = await fetch('/api/calendar/sync-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        if (response.status === 400 && result.error === 'Calendar not connected') {
+          setSyncError('Please connect your Google Calendar first')
+        } else {
+          setSyncError(result.message || 'Failed to sync calendar')
+        }
+        return
+      }
+      
+      console.log(`Synced ${result.result.success} events to Google Calendar`)
       await loadEvents()
+      
+      // Show success message
+      alert(`Successfully synced ${result.result.success} events to Google Calendar!`)
     } catch (error) {
       console.error('Error syncing to calendar:', error)
+      setSyncError('Failed to sync calendar. Please try again.')
     } finally {
       setSyncing(false)
     }
@@ -102,7 +130,7 @@ export default function CalendarPage() {
   }
 
   const getEventIcon = (type: 'renewal' | 'trial_end') => {
-    return type === 'renewal' ? '💳' : '⏰'
+    return type === 'renewal' ? <CreditCard className="w-4 h-4" /> : <Clock className="w-4 h-4" />
   }
 
   const getEventColor = (type: 'renewal' | 'trial_end') => {
@@ -162,7 +190,7 @@ export default function CalendarPage() {
                 <CalendarIcon className={`w-5 h-5 ${calendarConnected ? 'text-green-600' : 'text-yellow-600'}`} />
                 <div>
                   <h3 className={`font-medium ${calendarConnected ? 'text-green-900' : 'text-yellow-900'}`}>
-                    {calendarConnected ? '✅ Google Calendar Connected' : '📅 Connect Google Calendar'}
+                    {calendarConnected ? 'Google Calendar Connected' : 'Connect Google Calendar'}
                   </h3>
                   <p className={`text-sm ${calendarConnected ? 'text-green-700' : 'text-yellow-700'}`}>
                     {calendarConnected 
@@ -208,6 +236,29 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
 
+        {/* Error Message */}
+        {syncError && (
+          <Card className="mb-8 border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <div>
+                  <h3 className="font-medium text-red-900">Sync Error</h3>
+                  <p className="text-sm text-red-700">{syncError}</p>
+                </div>
+                <Button 
+                  onClick={() => setSyncError(null)} 
+                  variant="outline" 
+                  size="sm"
+                  className="ml-auto"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Upcoming Events */}
           <Card className="trust-card">
@@ -215,6 +266,11 @@ export default function CalendarPage() {
               <CardTitle className="flex items-center space-x-2">
                 <Clock className="w-5 h-5" />
                 <span>Upcoming Events</span>
+                {events.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {events.length} events
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
                 Your subscription renewals and trial end dates
@@ -236,10 +292,12 @@ export default function CalendarPage() {
                     const isUrgent = daysUntil <= 3
                     
                     return (
-                      <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <span className="text-lg">{getEventIcon(event.type)}</span>
+                            <div className="text-gray-600">
+                              {getEventIcon(event.type)}
+                            </div>
                             <h3 className="font-medium">{event.title}</h3>
                             <Badge className={getEventColor(event.type)}>
                               {event.type === 'renewal' ? 'Renewal' : 'Trial End'}
@@ -248,6 +306,12 @@ export default function CalendarPage() {
                               <Badge variant="destructive" className="animate-pulse">
                                 <AlertTriangle className="w-3 h-3 mr-1" />
                                 Urgent
+                              </Badge>
+                            )}
+                            {event.calendarEventId && (
+                              <Badge variant="outline" className="text-green-600 border-green-200">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Synced
                               </Badge>
                             )}
                           </div>
@@ -296,9 +360,18 @@ export default function CalendarPage() {
                     When you connect Google Calendar, new subscriptions will automatically create calendar events for renewals and trial endings.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">💳 Renewal Reminders</Badge>
-                    <Badge variant="outline">⏰ Trial End Alerts</Badge>
-                    <Badge variant="outline">🔔 1-Day Notifications</Badge>
+                    <Badge variant="outline" className="flex items-center space-x-1">
+                      <CreditCard className="w-3 h-3" />
+                      <span>Renewal Reminders</span>
+                    </Badge>
+                    <Badge variant="outline" className="flex items-center space-x-1">
+                      <Clock className="w-3 h-3" />
+                      <span>Trial End Alerts</span>
+                    </Badge>
+                    <Badge variant="outline" className="flex items-center space-x-1">
+                      <Bell className="w-3 h-3" />
+                      <span>1-Day Notifications</span>
+                    </Badge>
                   </div>
                 </div>
 

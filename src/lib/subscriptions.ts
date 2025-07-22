@@ -272,6 +272,7 @@ export class SubscriptionService {
         category: this.getCategoryFromService(parsedData.serviceName),
         // New fields for AI parsing
         source_email_id: parsedData.sourceEmailId,
+        source_email_subject: parsedData.sourceEmailSubject, // Add email subject
         cancel_url: parsedData.cancelUrl,
         confidence_score: parsedData.confidence,
         created_by: 'ai' as const,

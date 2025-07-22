@@ -1,21 +1,39 @@
--- Update subscriptions table to add calendar integration fields
--- Run this in your Supabase SQL editor to add calendar event tracking
+-- Update subscriptions table to include calendar fields
+ALTER TABLE subscriptions 
+ADD COLUMN IF NOT EXISTS calendar_event_id TEXT,
+ADD COLUMN IF NOT EXISTS calendar_id TEXT;
 
--- Add calendar event ID fields to track Google Calendar events
-ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS renewal_calendar_event_id TEXT;
-ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS trial_calendar_event_id TEXT;
+-- Create user_calendars table to store user's dedicated calendar
+CREATE TABLE IF NOT EXISTS user_calendars (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  calendar_id TEXT UNIQUE NOT NULL,
+  calendar_name TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- Create indexes for calendar event IDs for faster lookups
-CREATE INDEX IF NOT EXISTS idx_subscriptions_renewal_calendar_event_id ON subscriptions(renewal_calendar_event_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_trial_calendar_event_id ON subscriptions(trial_calendar_event_id);
+-- Add RLS policies for user_calendars table
+ALTER TABLE user_calendars ENABLE ROW LEVEL SECURITY;
 
--- Add comments for documentation
-COMMENT ON COLUMN subscriptions.renewal_calendar_event_id IS 'Google Calendar event ID for subscription renewal reminder';
-COMMENT ON COLUMN subscriptions.trial_calendar_event_id IS 'Google Calendar event ID for trial end reminder';
+-- Policy: Users can only see their own calendars
+CREATE POLICY "Users can view own calendars" ON user_calendars
+  FOR SELECT USING (auth.uid() = user_id);
 
--- Verify the columns were added
-SELECT column_name, data_type, is_nullable 
-FROM information_schema.columns 
-WHERE table_name = 'subscriptions' 
-  AND column_name IN ('renewal_calendar_event_id', 'trial_calendar_event_id')
-ORDER BY column_name; 
+-- Policy: Users can insert their own calendars
+CREATE POLICY "Users can insert own calendars" ON user_calendars
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Policy: Users can update their own calendars
+CREATE POLICY "Users can update own calendars" ON user_calendars
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Policy: Users can delete their own calendars
+CREATE POLICY "Users can delete own calendars" ON user_calendars
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_subscriptions_calendar_event_id ON subscriptions(calendar_event_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_calendar_id ON subscriptions(calendar_id);
+CREATE INDEX IF NOT EXISTS idx_user_calendars_user_id ON user_calendars(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_calendars_calendar_id ON user_calendars(calendar_id); 

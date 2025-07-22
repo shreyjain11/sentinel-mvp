@@ -1,15 +1,6 @@
 import { supabase } from './supabase'
-
-// Only import Google APIs on server side
-let calendar_v3: any
-let google: any
-
-if (typeof window === 'undefined') {
-  // Server-side only imports
-  const googleapis = require('@googleapis/calendar')
-  calendar_v3 = googleapis.calendar_v3
-  google = require('googleapis').google
-}
+import { calendar_v3 } from '@googleapis/calendar'
+import { google } from 'googleapis'
 
 export interface CalendarEvent {
   id: string
@@ -23,31 +14,11 @@ export interface CalendarEvent {
   calendarId?: string
 }
 
-export interface GoogleCalendarEvent {
-  id: string
-  summary: string
-  description: string
-  start: {
-    date: string
-    timeZone: string
-  }
-  end: {
-    date: string
-    timeZone: string
-  }
-}
-
-export class CalendarService {
+export class CalendarServerService {
   /**
    * Create a Google Calendar client using stored tokens
    */
-  static async createCalendarClient(userId: string): Promise<any | null> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      console.error('Calendar operations must be performed server-side')
-      return null
-    }
-
+  static async createCalendarClient(userId: string): Promise<calendar_v3.Calendar | null> {
     try {
       // Get stored tokens from Supabase
       const { data: tokens, error } = await supabase
@@ -103,11 +74,6 @@ export class CalendarService {
    * Refresh access token using refresh token
    */
   static async refreshAccessToken(userId: string, refreshToken: string): Promise<boolean> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      return false
-    }
-
     try {
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET
@@ -164,11 +130,6 @@ export class CalendarService {
    * Get or create user's dedicated calendar
    */
   static async getUserCalendar(userId: string): Promise<string | null> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      return null
-    }
-
     try {
       const calendar = await this.createCalendarClient(userId)
       if (!calendar) return null
@@ -242,12 +203,6 @@ export class CalendarService {
       currency?: string
     }
   ): Promise<string | null> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      console.error('Calendar operations must be performed server-side')
-      return null
-    }
-
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
@@ -347,138 +302,9 @@ export class CalendarService {
   }
 
   /**
-   * Update a calendar event
-   */
-  static async updateSubscriptionEvent(
-    subscriptionId: string,
-    eventId: string,
-    updates: {
-      title?: string
-      description?: string
-      date?: string
-    }
-  ): Promise<boolean> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      return false
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return false
-
-      const userId = session.user.id
-      const calendar = await this.createCalendarClient(userId)
-      if (!calendar) return false
-
-      // Get user's calendar ID
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('calendar_id')
-        .eq('id', subscriptionId)
-        .single()
-
-      if (!subscription?.calendar_id) {
-        console.error('No calendar ID found for subscription')
-        return false
-      }
-
-      // Prepare event updates
-      const eventUpdate: any = {}
-      
-      if (updates.title) eventUpdate.summary = updates.title
-      if (updates.description) eventUpdate.description = updates.description
-      if (updates.date) {
-        eventUpdate.start = {
-          date: updates.date,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        }
-        eventUpdate.end = {
-          date: updates.date,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        }
-      }
-
-      const response = await calendar.events.update({
-        calendarId: subscription.calendar_id,
-        eventId: eventId,
-        requestBody: eventUpdate
-      })
-
-      if (!response.data.id) {
-        console.error('Failed to update calendar event')
-        return false
-      }
-
-      console.log(`✅ Updated calendar event: ${eventId}`)
-      return true
-    } catch (error) {
-      console.error('Error updating calendar event:', error)
-      return false
-    }
-  }
-
-  /**
-   * Delete a calendar event
-   */
-  static async deleteSubscriptionEvent(subscriptionId: string): Promise<boolean> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      return false
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return false
-
-      // Get event details from subscription
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('calendar_event_id, calendar_id')
-        .eq('id', subscriptionId)
-        .single()
-
-      if (!subscription?.calendar_event_id || !subscription?.calendar_id) {
-        console.log('No calendar event found for subscription')
-        return true // Consider it successful if no event exists
-      }
-
-      const userId = session.user.id
-      const calendar = await this.createCalendarClient(userId)
-      if (!calendar) return false
-
-      // Delete the event
-      await calendar.events.delete({
-        calendarId: subscription.calendar_id,
-        eventId: subscription.calendar_event_id
-      })
-
-      // Remove event ID from subscription
-      await supabase
-        .from('subscriptions')
-        .update({
-          calendar_event_id: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', subscriptionId)
-
-      console.log(`✅ Deleted calendar event: ${subscription.calendar_event_id}`)
-      return true
-    } catch (error) {
-      console.error('Error deleting calendar event:', error)
-      return false
-    }
-  }
-
-  /**
    * Sync all confirmed subscriptions to calendar
    */
   static async syncAllSubscriptions(): Promise<{ success: number; failed: number }> {
-    // Server-side only
-    if (typeof window !== 'undefined') {
-      return { success: 0, failed: 0 }
-    }
-
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return { success: 0, failed: 0 }
@@ -553,41 +379,6 @@ export class CalendarService {
   }
 
   /**
-   * Connect Google Calendar
-   */
-  static async connectCalendar(): Promise<boolean> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        console.error('No active session')
-        return false
-      }
-
-      // Redirect to Google OAuth with calendar scope
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-      const redirectUri = `${window.location.origin}/auth/gmail/callback`
-      
-      const params = new URLSearchParams({
-        client_id: clientId!,
-        redirect_uri: redirectUri,
-        response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly',
-        access_type: 'offline',
-        prompt: 'consent',
-        include_granted_scopes: 'true'
-      })
-
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
-      window.location.href = authUrl
-      
-      return true
-    } catch (error) {
-      console.error('Error connecting calendar:', error)
-      return false
-    }
-  }
-
-  /**
    * Check if user has Google Calendar connected
    */
   static async isCalendarConnected(): Promise<boolean> {
@@ -616,70 +407,6 @@ export class CalendarService {
     } catch (error) {
       console.error('Error checking calendar connection:', error)
       return false
-    }
-  }
-
-  /**
-   * Get upcoming calendar events from subscriptions
-   */
-  static async getUpcomingEvents(): Promise<CalendarEvent[]> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return []
-
-      // Get subscriptions with upcoming renewal or trial end dates
-      const { data: subscriptions, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('status', 'active')
-        .or(`renewal_date.gte.${new Date().toISOString().split('T')[0]},trial_end_date.gte.${new Date().toISOString().split('T')[0]}`)
-        .order('renewal_date', { ascending: true })
-
-      if (error) {
-        console.error('Error fetching subscriptions for calendar events:', error)
-        return []
-      }
-
-      const events: CalendarEvent[] = []
-
-      subscriptions?.forEach(subscription => {
-        // Add renewal event if renewal_date exists and is in the future
-        if (subscription.renewal_date && new Date(subscription.renewal_date) > new Date()) {
-          events.push({
-            id: `renewal-${subscription.id}`,
-            title: `${subscription.name} Renewal`,
-            description: `Your ${subscription.name} subscription will renew on ${subscription.renewal_date}`,
-            start: subscription.renewal_date,
-            end: subscription.renewal_date,
-            type: 'renewal',
-            subscriptionId: subscription.id,
-            calendarEventId: subscription.calendar_event_id,
-            calendarId: subscription.calendar_id
-          })
-        }
-
-        // Add trial end event if trial_end_date exists and is in the future
-        if (subscription.trial_end_date && new Date(subscription.trial_end_date) > new Date()) {
-          events.push({
-            id: `trial-${subscription.id}`,
-            title: `${subscription.name} Trial Ends`,
-            description: `Your ${subscription.name} trial will end on ${subscription.trial_end_date}`,
-            start: subscription.trial_end_date,
-            end: subscription.trial_end_date,
-            type: 'trial_end',
-            subscriptionId: subscription.id,
-            calendarEventId: subscription.calendar_event_id,
-            calendarId: subscription.calendar_id
-          })
-        }
-      })
-
-      // Sort by date
-      return events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-    } catch (error) {
-      console.error('Error getting upcoming events:', error)
-      return []
     }
   }
 } 

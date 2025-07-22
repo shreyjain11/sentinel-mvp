@@ -12,6 +12,20 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  webpack: (config, { isServer }) => {
+    // Only include Node.js modules on server side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        http2: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
