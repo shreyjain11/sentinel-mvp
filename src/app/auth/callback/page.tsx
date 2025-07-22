@@ -47,37 +47,27 @@ function AuthCallbackContent() {
         if (hash) {
           addDebugInfo(`Processing OAuth hash fragment: ${hash.substring(0, 50)}...`)
           
-          // Extract tokens from hash
-          const hashParams = new URLSearchParams(hash.substring(1))
-          const accessToken = hashParams.get('access_token')
-          const refreshToken = hashParams.get('refresh_token')
-          const expiresIn = hashParams.get('expires_in')
+          // Let Supabase handle the OAuth response automatically
+          // This should process the hash fragment and establish the session
+          const { data: { session }, error: authError } = await supabase.auth.getSession()
           
-          if (accessToken) {
-            addDebugInfo('Access token found in hash, processing session...')
-            
-            // Use Supabase's setSession method to establish the session
-            const { data, error: setSessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || '',
-            })
-            
-            if (setSessionError) {
-              addDebugInfo(`Error setting session: ${setSessionError.message}`)
-              throw setSessionError
-            }
-            
-            if (data.session) {
-              addDebugInfo(`Session established successfully: ${data.session.user.email}`)
-              setStatus('success')
-              setMessage('Authentication successful!')
-              setTimeout(() => router.push('/dashboard'), 2000)
-              return
-            } else {
-              addDebugInfo('No session returned from setSession')
-            }
+          if (authError) {
+            addDebugInfo(`Auth error: ${authError.message}`)
+            console.error('Auth error:', authError)
+            setStatus('error')
+            setMessage(`Authentication error: ${authError.message}`)
+            setTimeout(() => router.push('/auth'), 3000)
+            return
+          }
+
+          if (session) {
+            addDebugInfo(`Session established successfully: ${session.user.email}`)
+            setStatus('success')
+            setMessage('Authentication successful!')
+            setTimeout(() => router.push('/dashboard'), 2000)
+            return
           } else {
-            addDebugInfo('No access token found in hash')
+            addDebugInfo('No session found after processing hash')
           }
         } else {
           addDebugInfo('No hash fragment found in URL')
