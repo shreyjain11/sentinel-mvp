@@ -123,10 +123,39 @@ export default function DebugCalendarPage() {
     }
   }
 
+  const testCalendarSync = async () => {
+    addDebugLog('Testing calendar sync (creating test event)...')
+    try {
+      const response = await fetch('/api/debug/test-calendar-sync', { method: 'POST' })
+      const data = await response.json()
+      addDebugLog(`Calendar sync test result: ${data.success ? 'Success' : 'Failed'}`)
+      if (data.success) {
+        addDebugLog(`Test event created and cleaned up successfully`)
+      } else if (data.error) {
+        addDebugLog(`Calendar sync error: ${data.error}`)
+      }
+    } catch (error) {
+      addDebugLog(`Calendar sync exception: ${error}`)
+    }
+  }
+
   const reconnectCalendar = async () => {
     addDebugLog('Initiating calendar reconnection...')
     try {
-      window.location.href = '/auth/gmail/callback?reconnect=true'
+      // Initiate a new OAuth flow instead of redirecting to callback
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+      const redirectUri = `${window.location.origin}/auth/gmail/callback`
+      const scope = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly'
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `access_type=offline&` +
+        `prompt=consent`
+      
+      window.location.href = authUrl
     } catch (error) {
       addDebugLog(`Reconnection error: ${error}`)
     }
@@ -328,6 +357,10 @@ export default function DebugCalendarPage() {
               <Button onClick={testTokenRefresh} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Test Token Refresh
+              </Button>
+              <Button onClick={testCalendarSync} variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                Test Calendar Sync
               </Button>
               <Button onClick={reconnectCalendar} variant="outline">
                 <Globe className="w-4 h-4 mr-2" />
