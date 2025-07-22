@@ -553,66 +553,16 @@ export class CalendarService {
   }
 
   /**
-   * Connect Google Calendar
-   */
-  static async connectCalendar(): Promise<boolean> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        console.error('No active session')
-        return false
-      }
-
-      // Redirect to Google OAuth with calendar scope
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-      const redirectUri = `${window.location.origin}/auth/gmail/callback`
-      
-      const params = new URLSearchParams({
-        client_id: clientId!,
-        redirect_uri: redirectUri,
-        response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly',
-        access_type: 'offline',
-        prompt: 'consent',
-        include_granted_scopes: 'true'
-      })
-
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
-      window.location.href = authUrl
-      
-      return true
-    } catch (error) {
-      console.error('Error connecting calendar:', error)
-      return false
-    }
-  }
-
-  /**
-   * Check if user has Google Calendar connected
+   * Check if user has connected their Google Calendar
    */
   static async isCalendarConnected(): Promise<boolean> {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return false
-
-      // Check if we have valid calendar tokens
-      const { data: tokens } = await supabase
-        .from('gmail_tokens')
-        .select('access_token, scope, expires_at')
-        .eq('user_id', session.user.id)
-        .single()
-
-      if (!tokens || !tokens.access_token) return false
-
-      // Check if the scope includes calendar access
-      const hasCalendarScope = tokens.scope && 
-        tokens.scope.includes('https://www.googleapis.com/auth/calendar')
-
-      // Check if token is not expired
-      const isTokenValid = tokens.expires_at && 
-        new Date(tokens.expires_at) > new Date()
-
-      return hasCalendarScope && isTokenValid
+      const response = await fetch('/api/calendar/status')
+      if (response.ok) {
+        const data = await response.json()
+        return data.connected
+      }
+      return false
     } catch (error) {
       console.error('Error checking calendar connection:', error)
       return false
@@ -620,66 +570,44 @@ export class CalendarService {
   }
 
   /**
-   * Get upcoming calendar events from subscriptions
+   * Get upcoming events from user's subscriptions
    */
   static async getUpcomingEvents(): Promise<CalendarEvent[]> {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return []
-
-      // Get subscriptions with upcoming renewal or trial end dates
-      const { data: subscriptions, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('status', 'active')
-        .or(`renewal_date.gte.${new Date().toISOString().split('T')[0]},trial_end_date.gte.${new Date().toISOString().split('T')[0]}`)
-        .order('renewal_date', { ascending: true })
-
-      if (error) {
-        console.error('Error fetching subscriptions for calendar events:', error)
-        return []
+      const response = await fetch('/api/calendar/events')
+      if (response.ok) {
+        const data = await response.json()
+        return data.events || []
       }
-
-      const events: CalendarEvent[] = []
-
-      subscriptions?.forEach(subscription => {
-        // Add renewal event if renewal_date exists and is in the future
-        if (subscription.renewal_date && new Date(subscription.renewal_date) > new Date()) {
-          events.push({
-            id: `renewal-${subscription.id}`,
-            title: `${subscription.name} Renewal`,
-            description: `Your ${subscription.name} subscription will renew on ${subscription.renewal_date}`,
-            start: subscription.renewal_date,
-            end: subscription.renewal_date,
-            type: 'renewal',
-            subscriptionId: subscription.id,
-            calendarEventId: subscription.calendar_event_id,
-            calendarId: subscription.calendar_id
-          })
-        }
-
-        // Add trial end event if trial_end_date exists and is in the future
-        if (subscription.trial_end_date && new Date(subscription.trial_end_date) > new Date()) {
-          events.push({
-            id: `trial-${subscription.id}`,
-            title: `${subscription.name} Trial Ends`,
-            description: `Your ${subscription.name} trial will end on ${subscription.trial_end_date}`,
-            start: subscription.trial_end_date,
-            end: subscription.trial_end_date,
-            type: 'trial_end',
-            subscriptionId: subscription.id,
-            calendarEventId: subscription.calendar_event_id,
-            calendarId: subscription.calendar_id
-          })
-        }
-      })
-
-      // Sort by date
-      return events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-    } catch (error) {
-      console.error('Error getting upcoming events:', error)
       return []
+    } catch (error) {
+      console.error('Error loading events:', error)
+      return []
+    }
+  }
+
+  /**
+   * Connect Google Calendar (OAuth flow)
+   */
+  static async connectCalendar(): Promise<void> {
+    try {
+      // Redirect to Google OAuth
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+      const redirectUri = `${window.location.origin}/auth/gmail/callback`
+      const scope = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly'
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `access_type=offline&` +
+        `prompt=consent`
+      
+      window.location.href = authUrl
+    } catch (error) {
+      console.error('Error connecting calendar:', error)
+      throw error
     }
   }
 } 

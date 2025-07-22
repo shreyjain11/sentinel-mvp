@@ -4,10 +4,42 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Shield, ArrowLeft, Calendar as CalendarIcon, RefreshCw, CheckCircle, Clock, AlertTriangle, RefreshCcw, CreditCard, Bell } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { 
+  Shield, 
+  ArrowLeft, 
+  Calendar as CalendarIcon, 
+  RefreshCw, 
+  CheckCircle, 
+  Clock, 
+  AlertTriangle, 
+  RefreshCcw, 
+  CreditCard, 
+  Bell,
+  Settings,
+  ExternalLink,
+  Play,
+  Pause,
+  Zap,
+  X,
+  Plus,
+  Info,
+  CalendarDays,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react"
 import Link from "next/link"
 import { CalendarService, CalendarEvent } from '@/lib/calendar'
 import { formatCurrency } from '@/lib/utils'
+
+interface CalendarPreferences {
+  autoSync: boolean
+  syncTrials: boolean
+  syncRenewals: boolean
+  showCanceled: boolean
+}
 
 export default function CalendarPage() {
   const [calendarConnected, setCalendarConnected] = useState(false)
@@ -15,19 +47,26 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [lastSynced, setLastSynced] = useState<string | null>(null)
+  const [showPreferences, setShowPreferences] = useState(false)
+  const [preferences, setPreferences] = useState<CalendarPreferences>({
+    autoSync: true,
+    syncTrials: true,
+    syncRenewals: true,
+    showCanceled: false
+  })
 
   useEffect(() => {
     checkCalendarStatus()
     loadEvents()
+    loadPreferences()
   }, [])
 
   // Check for URL parameters that indicate successful OAuth
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('connected') === 'true') {
-      // Remove the parameter from URL
       window.history.replaceState({}, '', window.location.pathname)
-      // Refresh the calendar status
       checkCalendarStatus()
     }
   }, [])
@@ -37,14 +76,41 @@ export default function CalendarPage() {
       const connected = await CalendarService.isCalendarConnected()
       console.log('Calendar connection status:', connected)
       setCalendarConnected(connected)
-      // Reload events when status changes
-      if (connected) {
-        await loadEvents()
-      }
+      // Always load events, regardless of connection status
+      await loadEvents()
     } catch (error) {
       console.error('Error checking calendar status:', error)
+      setCalendarConnected(false)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadPreferences = async () => {
+    try {
+      const response = await fetch('/api/calendar/preferences')
+      if (response.ok) {
+        const data = await response.json()
+        setPreferences(data.preferences)
+        setLastSynced(data.lastSynced)
+      }
+    } catch (error) {
+      console.error('Error loading preferences:', error)
+    }
+  }
+
+  const savePreferences = async (newPreferences: CalendarPreferences) => {
+    try {
+      const response = await fetch('/api/calendar/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: newPreferences })
+      })
+      if (response.ok) {
+        setPreferences(newPreferences)
+      }
+    } catch (error) {
+      console.error('Error saving preferences:', error)
     }
   }
 
@@ -52,6 +118,7 @@ export default function CalendarPage() {
     setLoading(true)
     await checkCalendarStatus()
     await loadEvents()
+    await loadPreferences()
   }
 
   const loadEvents = async () => {
@@ -83,9 +150,7 @@ export default function CalendarPage() {
       
       const response = await fetch('/api/calendar/sync-all', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       })
       
       const result = await response.json()
@@ -101,15 +166,27 @@ export default function CalendarPage() {
       
       console.log(`Synced ${result.result.success} events to Google Calendar`)
       await loadEvents()
+      await loadPreferences()
       
-      // Show success message
-      alert(`Successfully synced ${result.result.success} events to Google Calendar!`)
+      // Show success toast
+      showToast(`Successfully synced ${result.result.success} events!`, 'success')
     } catch (error) {
       console.error('Error syncing to calendar:', error)
       setSyncError('Failed to sync calendar. Please try again.')
     } finally {
       setSyncing(false)
     }
+  }
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    // Simple toast implementation
+    const toast = document.createElement('div')
+    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`
+    toast.textContent = message
+    document.body.appendChild(toast)
+    setTimeout(() => document.body.removeChild(toast), 3000)
   }
 
   const formatDate = (dateString: string) => {
@@ -129,6 +206,14 @@ export default function CalendarPage() {
     return diffDays
   }
 
+  const getRelativeDate = (dateString: string) => {
+    const daysUntil = getDaysUntil(dateString)
+    if (daysUntil === 0) return 'Today'
+    if (daysUntil === 1) return 'Tomorrow'
+    if (daysUntil > 0) return `In ${daysUntil} days`
+    return `${Math.abs(daysUntil)} days ago`
+  }
+
   const getEventIcon = (type: 'renewal' | 'trial_end') => {
     return type === 'renewal' ? <CreditCard className="w-4 h-4" /> : <Clock className="w-4 h-4" />
   }
@@ -136,7 +221,35 @@ export default function CalendarPage() {
   const getEventColor = (type: 'renewal' | 'trial_end') => {
     return type === 'renewal' 
       ? 'bg-red-100 text-red-800 border-red-200' 
-      : 'bg-orange-100 text-orange-800 border-orange-200'
+      : 'bg-blue-100 text-blue-800 border-blue-200'
+  }
+
+  const getServiceIcon = (serviceName: string) => {
+    // Simple service icon mapping
+    const serviceIcons: { [key: string]: string } = {
+      'netflix': '🎬',
+      'spotify': '🎵',
+      'amazon': '📦',
+      'google': '🔍',
+      'microsoft': '🪟',
+      'apple': '🍎',
+      'adobe': '🎨',
+      'dropbox': '📁',
+      'slack': '💬',
+      'zoom': '📹'
+    }
+    
+    const service = serviceName.toLowerCase()
+    for (const [key, icon] of Object.entries(serviceIcons)) {
+      if (service.includes(key)) return icon
+    }
+    return '📱' // Default icon
+  }
+
+  const openInGoogleCalendar = (eventId: string) => {
+    if (eventId) {
+      window.open(`https://calendar.google.com/calendar/event?eid=${eventId}`, '_blank')
+    }
   }
 
   if (loading) {
@@ -183,7 +296,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Connection Status */}
-        <Card className={`mb-8 ${calendarConnected ? 'border-green-200 bg-green-50/50' : 'border-yellow-200 bg-yellow-50/50'}`}>
+        <Card className={`mb-6 ${calendarConnected ? 'border-green-200 bg-green-50/50' : 'border-yellow-200 bg-yellow-50/50'}`}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -198,34 +311,46 @@ export default function CalendarPage() {
                       : 'Connect your Google Calendar to automatically create reminders for renewals and trial endings'
                     }
                   </p>
+                  {lastSynced && (
+                    <p className="text-xs text-green-600 mt-1">
+                      Last synced: {new Date(lastSynced).toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex space-x-2">
                 {!calendarConnected ? (
                   <>
-                  <Button onClick={connectCalendar} disabled={loading}>
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    Connect Calendar
-                  </Button>
+                    <Button onClick={connectCalendar} disabled={loading}>
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      Connect Calendar
+                    </Button>
                     <Button onClick={refreshStatus} disabled={loading} variant="outline" size="sm">
                       <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
                   </>
                 ) : (
                   <>
-                  <Button onClick={syncToCalendar} disabled={syncing} variant="outline">
-                    {syncing ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCcw className="w-4 h-4 mr-2" />
-                        Sync to Calendar
-                      </>
-                    )}
-                  </Button>
+                    <Button onClick={syncToCalendar} disabled={syncing} variant="outline">
+                      {syncing ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Sync Now
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      onClick={() => setShowPreferences(!showPreferences)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
                     <Button onClick={refreshStatus} disabled={loading} variant="outline" size="sm">
                       <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
@@ -236,9 +361,73 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
 
+        {/* Sync Preferences Modal */}
+        {showPreferences && (
+          <Card className="mb-6 border-blue-200 bg-blue-50/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium text-blue-900">Sync Preferences</h3>
+                <Button 
+                  onClick={() => setShowPreferences(false)} 
+                  variant="outline" 
+                  size="sm"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">Auto-sync new subscriptions</Label>
+                    <p className="text-xs text-gray-600">Automatically sync new confirmed subscriptions to calendar</p>
+                  </div>
+                  <Switch 
+                    checked={preferences.autoSync}
+                    onCheckedChange={(checked) => savePreferences({ ...preferences, autoSync: checked })}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">Sync trial endings</Label>
+                    <p className="text-xs text-gray-600">Create calendar events for trial end dates</p>
+                  </div>
+                  <Switch 
+                    checked={preferences.syncTrials}
+                    onCheckedChange={(checked) => savePreferences({ ...preferences, syncTrials: checked })}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">Sync renewals</Label>
+                    <p className="text-xs text-gray-600">Create calendar events for subscription renewals</p>
+                  </div>
+                  <Switch 
+                    checked={preferences.syncRenewals}
+                    onCheckedChange={(checked) => savePreferences({ ...preferences, syncRenewals: checked })}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">Show canceled subscriptions</Label>
+                    <p className="text-xs text-gray-600">Include canceled subscriptions in calendar events</p>
+                  </div>
+                  <Switch 
+                    checked={preferences.showCanceled}
+                    onCheckedChange={(checked) => savePreferences({ ...preferences, showCanceled: checked })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Error Message */}
         {syncError && (
-          <Card className="mb-8 border-red-200 bg-red-50">
+          <Card className="mb-6 border-red-200 bg-red-50">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -252,143 +441,68 @@ export default function CalendarPage() {
                   size="sm"
                   className="ml-auto"
                 >
-                  Dismiss
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Upcoming Events */}
-          <Card className="trust-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="w-5 h-5" />
-                <span>Upcoming Events</span>
-                {events.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {events.length} events
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Your subscription renewals and trial end dates
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {events.length === 0 ? (
-                <div className="text-center py-8">
-                  <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming events</h3>
-                  <p className="text-gray-600">
-                    Your subscription events will appear here when you have active subscriptions with renewal or trial end dates.
-                  </p>
+        {/* Calendar Settings Bar */}
+        {calendarConnected && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                  <div>
+                    <h3 className="font-medium">Sentinel Calendar</h3>
+                    <p className="text-sm text-gray-600">Your dedicated subscription calendar</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {events.slice(0, 10).map((event) => {
-                    const daysUntil = getDaysUntil(event.start)
-                    const isUrgent = daysUntil <= 3
-                    
-                    return (
-                      <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <div className="text-gray-600">
-                              {getEventIcon(event.type)}
-                            </div>
-                            <h3 className="font-medium">{event.title}</h3>
-                            <Badge className={getEventColor(event.type)}>
-                              {event.type === 'renewal' ? 'Renewal' : 'Trial End'}
-                            </Badge>
-                            {isUrgent && (
-                              <Badge variant="destructive" className="animate-pulse">
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                Urgent
-                              </Badge>
-                            )}
-                            {event.calendarEventId && (
-                              <Badge variant="outline" className="text-green-600 border-green-200">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Synced
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 mb-1">
-                            {formatDate(event.start)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {daysUntil === 0 ? 'Today' : 
-                             daysUntil === 1 ? 'Tomorrow' : 
-                             daysUntil > 0 ? `In ${daysUntil} days` : 
-                             `${Math.abs(daysUntil)} days ago`}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                  {events.length > 10 && (
-                    <p className="text-sm text-gray-500 text-center mt-4">
-                      And {events.length - 10} more events...
-                    </p>
-                  )}
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    <CalendarDays className="w-4 h-4 mr-2" />
+                    Change Calendar
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reconnect
+                  </Button>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Calendar Actions */}
-          <Card className="trust-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <CalendarIcon className="w-5 h-5" />
-                <span>Calendar Actions</span>
-              </CardTitle>
-              <CardDescription>
-                Manage your calendar integration
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <h3 className="font-medium">Automatic Sync</h3>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">
-                    When you connect Google Calendar, new subscriptions will automatically create calendar events for renewals and trial endings.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="flex items-center space-x-1">
-                      <CreditCard className="w-3 h-3" />
-                      <span>Renewal Reminders</span>
-                    </Badge>
-                    <Badge variant="outline" className="flex items-center space-x-1">
-                      <Clock className="w-3 h-3" />
-                      <span>Trial End Alerts</span>
-                    </Badge>
-                    <Badge variant="outline" className="flex items-center space-x-1">
-                      <Bell className="w-3 h-3" />
-                      <span>1-Day Notifications</span>
-                    </Badge>
-                  </div>
+        {/* Upcoming Events */}
+        <Card className="trust-card">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <CalendarDays className="w-5 h-5" />
+              <span>Upcoming Events</span>
+              {events.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {events.length} events
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              Your subscription renewals and trial end dates
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {events.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CalendarIcon className="w-8 h-8 text-blue-600" />
                 </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <RefreshCw className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-medium">Manual Sync</h3>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Sync all your existing subscriptions to Google Calendar at once.
-                  </p>
-                  <Button 
-                    onClick={syncToCalendar} 
-                    disabled={!calendarConnected || syncing}
-                    variant="outline"
-                    className="w-full"
-                  >
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions synced yet</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Start by parsing emails or syncing your existing subscriptions to see them here.
+                </p>
+                <div className="flex justify-center space-x-3">
+                  <Button onClick={syncToCalendar} disabled={!calendarConnected || syncing}>
                     {syncing ? (
                       <>
                         <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -396,32 +510,105 @@ export default function CalendarPage() {
                       </>
                     ) : (
                       <>
-                        <RefreshCcw className="w-4 h-4 mr-2" />
-                        Sync All Events
+                        <Zap className="w-4 h-4 mr-2" />
+                        Sync Now
                       </>
                     )}
                   </Button>
+                  <Link href="/dashboard">
+                    <Button variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Subscription
+                    </Button>
+                  </Link>
                 </div>
-
-                {!calendarConnected && (
-                  <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                      <h3 className="font-medium text-yellow-900">Calendar Not Connected</h3>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {events.slice(0, 10).map((event) => {
+                  const daysUntil = getDaysUntil(event.start)
+                  const isUrgent = daysUntil <= 3
+                  const isPast = daysUntil < 0
+                  
+                  return (
+                    <div key={event.id} className="group relative p-4 border rounded-lg hover:bg-gray-50 transition-all duration-200 hover:shadow-sm">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <span className="text-2xl">{getServiceIcon(event.title)}</span>
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900">{event.title}</h3>
+                              <p className="text-sm text-gray-600">{event.description}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Badge className={getEventColor(event.type)}>
+                              {getEventIcon(event.type)}
+                              <span className="ml-1">{event.type === 'renewal' ? 'Renewal' : 'Trial End'}</span>
+                            </Badge>
+                            
+                            {isUrgent && !isPast && (
+                              <Badge variant="destructive" className="animate-pulse">
+                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                Urgent
+                              </Badge>
+                            )}
+                            
+                            {event.calendarEventId && (
+                              <Badge variant="outline" className="text-green-600 border-green-200">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Synced
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center space-x-4 text-sm text-gray-600">
+                            <div className="flex items-center space-x-1">
+                              <CalendarIcon className="w-4 h-4" />
+                              <span>{formatDate(event.start)}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="w-4 h-4" />
+                              <span className={isUrgent && !isPast ? 'text-red-600 font-medium' : ''}>
+                                {getRelativeDate(event.start)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {event.calendarEventId && (
+                            <Button 
+                              onClick={() => openInGoogleCalendar(event.calendarEventId!)} 
+                              variant="outline" 
+                              size="sm"
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button variant="outline" size="sm">
+                            <RefreshCw className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-yellow-700 mb-3">
-                      Connect your Google Calendar to enable automatic event creation and reminders.
-                    </p>
-                    <Button onClick={connectCalendar} disabled={loading} className="w-full">
-                      <CalendarIcon className="w-4 h-4 mr-2" />
-                      Connect Google Calendar
+                  )
+                })}
+                
+                {events.length > 10 && (
+                  <div className="text-center pt-4">
+                    <Button variant="outline" className="text-gray-600">
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      Show {events.length - 10} more events
                     </Button>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   )
