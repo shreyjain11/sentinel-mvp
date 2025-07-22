@@ -9,14 +9,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if we have valid calendar tokens
-    const { data: tokens } = await supabase
+    // Check if we have valid tokens
+    const { data: tokens, error } = await supabase
       .from('gmail_tokens')
       .select('access_token, scope, expires_at')
       .eq('user_id', session.user.id)
       .single()
 
-    if (!tokens || !tokens.access_token) {
+    if (error || !tokens || !tokens.access_token) {
+      console.log('No tokens found for user:', session.user.id)
       return NextResponse.json({ connected: false })
     }
 
@@ -24,9 +25,17 @@ export async function GET(request: NextRequest) {
     const hasCalendarScope = tokens.scope && 
       tokens.scope.includes('https://www.googleapis.com/auth/calendar')
 
-    // Check if token is not expired
+    // Check if token is not expired (with some buffer)
     const isTokenValid = tokens.expires_at && 
-      new Date(tokens.expires_at) > new Date()
+      new Date(tokens.expires_at) > new Date(Date.now() + 5 * 60 * 1000) // 5 min buffer
+
+    console.log('Calendar status check:', {
+      userId: session.user.id,
+      hasCalendarScope,
+      isTokenValid,
+      expiresAt: tokens.expires_at,
+      scope: tokens.scope
+    })
 
     const connected = hasCalendarScope && isTokenValid
 
@@ -34,7 +43,8 @@ export async function GET(request: NextRequest) {
       connected,
       hasCalendarScope,
       isTokenValid,
-      expiresAt: tokens.expires_at
+      expiresAt: tokens.expires_at,
+      scope: tokens.scope
     })
 
   } catch (error) {

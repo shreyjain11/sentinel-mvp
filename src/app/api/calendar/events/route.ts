@@ -9,39 +9,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get subscriptions with upcoming renewal or trial end dates
+    // Get all active subscriptions
     const { data: subscriptions, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', session.user.id)
       .eq('status', 'active')
-      .or(`renewal_date.gte.${new Date().toISOString().split('T')[0]},trial_end_date.gte.${new Date().toISOString().split('T')[0]}`)
-      .order('renewal_date', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching subscriptions for calendar events:', error)
       return NextResponse.json({ events: [] })
     }
 
+    console.log('Found subscriptions:', subscriptions?.length || 0, subscriptions)
+
     const events: any[] = []
 
     subscriptions?.forEach(subscription => {
-      // Add renewal event if renewal_date exists and is in the future
-      if (subscription.renewal_date && new Date(subscription.renewal_date) > new Date()) {
-        events.push({
-          id: `renewal-${subscription.id}`,
-          title: `${subscription.name} Renewal`,
-          description: `Your ${subscription.name} subscription will renew on ${subscription.renewal_date}`,
-          start: subscription.renewal_date,
-          end: subscription.renewal_date,
-          type: 'renewal',
-          subscriptionId: subscription.id,
-          calendarEventId: subscription.calendar_event_id,
-          calendarId: subscription.calendar_id
-        })
-      }
+      // Create a renewal event for each active subscription
+      // Use end_date if available, otherwise use a default date
+      const eventDate = subscription.renewal_date || subscription.end_date || 
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
 
-      // Add trial end event if trial_end_date exists and is in the future
+      events.push({
+        id: `renewal-${subscription.id}`,
+        title: `${subscription.name} Renewal`,
+        description: `Your ${subscription.name} subscription will renew on ${eventDate}`,
+        start: eventDate,
+        end: eventDate,
+        type: 'renewal',
+        subscriptionId: subscription.id,
+        calendarEventId: subscription.calendar_event_id,
+        calendarId: subscription.calendar_id
+      })
+
+      // Add trial end event if trial_end_date exists
       if (subscription.trial_end_date && new Date(subscription.trial_end_date) > new Date()) {
         events.push({
           id: `trial-${subscription.id}`,
@@ -60,10 +63,13 @@ export async function GET(request: NextRequest) {
     // Sort by date
     const sortedEvents = events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
 
+    console.log('Generated events:', sortedEvents.length, sortedEvents)
+
     return NextResponse.json({
       success: true,
       events: sortedEvents,
-      count: sortedEvents.length
+      count: sortedEvents.length,
+      subscriptions: subscriptions?.length || 0
     })
 
   } catch (error) {

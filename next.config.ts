@@ -3,13 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has type errors.
     ignoreBuildErrors: true,
   },
   webpack: (config, { isServer }) => {
@@ -22,10 +18,25 @@ const nextConfig: NextConfig = {
         tls: false,
         child_process: false,
         http2: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+        util: false,
+        buffer: false,
+        process: false,
       };
     }
     return config;
   },
+  experimental: {
+    serverComponentsExternalPackages: ['@googleapis/calendar', 'googleapis', 'google-auth-library']
+  }
 };
 
 export default nextConfig;

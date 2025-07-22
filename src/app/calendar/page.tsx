@@ -148,6 +148,13 @@ export default function CalendarPage() {
       setSyncing(true)
       setSyncError(null)
       
+      // First check if calendar is connected
+      const isConnected = await CalendarService.isCalendarConnected()
+      if (!isConnected) {
+        setSyncError('Please connect your Google Calendar first')
+        return
+      }
+      
       const response = await fetch('/api/calendar/sync-all', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,11 +163,7 @@ export default function CalendarPage() {
       const result = await response.json()
       
       if (!response.ok) {
-        if (response.status === 400 && result.error === 'Calendar not connected') {
-          setSyncError('Please connect your Google Calendar first')
-        } else {
-          setSyncError(result.message || 'Failed to sync calendar')
-        }
+        setSyncError(result.message || 'Failed to sync calendar')
         return
       }
       
