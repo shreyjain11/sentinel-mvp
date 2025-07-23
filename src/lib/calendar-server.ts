@@ -20,66 +20,133 @@ export class CalendarServerService {
    */
   static async createCalendarClient(userId: string): Promise<calendar_v3.Calendar | null> {
     try {
+      console.log('=== CREATE CALENDAR CLIENT START ===')
       console.log('Creating calendar client for user:', userId)
       
-      // Get stored tokens from Supabase (simplified like the working test)
+      // Step 1: Get stored tokens from Supabase
+      console.log('Step 1: Fetching tokens from database...')
       const { data: tokens, error } = await supabase
         .from('gmail_tokens')
         .select('access_token, refresh_token, expires_at')
         .eq('user_id', userId)
         .single()
 
-      if (error || !tokens || !tokens.access_token) {
-        console.error('No valid tokens found for user:', userId, error)
+      console.log('Database query result:', {
+        hasData: !!tokens,
+        hasError: !!error,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details
+      })
+
+      if (error) {
+        console.error('❌ Database error:', error)
         return null
       }
 
-      console.log('Found tokens:', {
+      if (!tokens) {
+        console.error('❌ No tokens found in database')
+        return null
+      }
+
+      if (!tokens.access_token) {
+        console.error('❌ No access token found in tokens')
+        return null
+      }
+
+      console.log('✅ Tokens found successfully:', {
         hasAccessToken: !!tokens.access_token,
+        accessTokenLength: tokens.access_token?.length || 0,
         hasRefreshToken: !!tokens.refresh_token,
+        refreshTokenLength: tokens.refresh_token?.length || 0,
         expiresAt: tokens.expires_at
       })
 
-      // Only refresh if token is actually expired
+      // Step 2: Check token expiration
+      console.log('Step 2: Checking token expiration...')
       const isExpired = tokens.expires_at && new Date(tokens.expires_at) <= new Date()
-      console.log('Token expired check:', { isExpired, expiresAt: tokens.expires_at, currentTime: new Date().toISOString() })
+      console.log('Token expiration check:', { 
+        isExpired, 
+        expiresAt: tokens.expires_at, 
+        currentTime: new Date().toISOString(),
+        timeUntilExpiry: tokens.expires_at ? new Date(tokens.expires_at).getTime() - new Date().getTime() : 'N/A'
+      })
       
       let accessToken = tokens.access_token
       
+      // Step 3: Refresh token if needed
       if (isExpired && tokens.refresh_token) {
-        console.log('Token expired, refreshing...')
+        console.log('Step 3: Token expired, attempting refresh...')
         const refreshed = await this.refreshAccessToken(userId, tokens.refresh_token)
         if (!refreshed) {
-          console.error('Failed to refresh token')
+          console.error('❌ Failed to refresh token')
           return null
         }
-        console.log('Token refreshed successfully')
+        console.log('✅ Token refreshed successfully')
         
         // Get the refreshed token
-        const { data: refreshedTokens } = await supabase
+        console.log('Step 3a: Fetching refreshed token...')
+        const { data: refreshedTokens, error: refreshError } = await supabase
           .from('gmail_tokens')
           .select('access_token')
           .eq('user_id', userId)
           .single()
         
+        console.log('Refreshed token fetch result:', {
+          hasData: !!refreshedTokens,
+          hasError: !!refreshError,
+          errorMessage: refreshError?.message
+        })
+        
         if (refreshedTokens?.access_token) {
           accessToken = refreshedTokens.access_token
+          console.log('✅ Using refreshed access token')
+        } else {
+          console.log('⚠️ No refreshed token found, using original')
         }
+      } else {
+        console.log('Step 3: Token not expired, skipping refresh')
       }
 
-      console.log('Using access token:', accessToken.substring(0, 20) + '...')
-
-      // Create Google Calendar client
-      const auth = new google.auth.OAuth2()
-      auth.setCredentials({
-        access_token: accessToken
+      console.log('Final access token info:', {
+        tokenLength: accessToken.length,
+        tokenPrefix: accessToken.substring(0, 20) + '...',
+        tokenSuffix: '...' + accessToken.substring(accessToken.length - 10)
       })
 
-      const calendar = google.calendar({ version: 'v3', auth })
-      console.log('Calendar client created successfully')
-      return calendar
+      // Step 4: Create Google Calendar client
+      console.log('Step 4: Creating Google Calendar client...')
+      try {
+        const auth = new google.auth.OAuth2()
+        console.log('✅ OAuth2 client created')
+        
+        auth.setCredentials({
+          access_token: accessToken
+        })
+        console.log('✅ Credentials set')
+
+        const calendar = google.calendar({ version: 'v3', auth })
+        console.log('✅ Calendar client created')
+        
+        console.log('=== CREATE CALENDAR CLIENT SUCCESS ===')
+        return calendar
+      } catch (clientError) {
+        console.error('❌ Error creating calendar client:', clientError)
+        console.error('Client error details:', {
+          name: clientError instanceof Error ? clientError.name : 'Unknown',
+          message: clientError instanceof Error ? clientError.message : 'Unknown',
+          stack: clientError instanceof Error ? clientError.stack : 'No stack'
+        })
+        return null
+      }
     } catch (error) {
-      console.error('Error creating calendar client:', error)
+      console.error('=== CREATE CALENDAR CLIENT FAILED ===')
+      console.error('❌ Top-level error creating calendar client:', error)
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      })
       return null
     }
   }
@@ -89,14 +156,25 @@ export class CalendarServerService {
    */
   static async refreshAccessToken(userId: string, refreshToken: string): Promise<boolean> {
     try {
+      console.log('=== REFRESH ACCESS TOKEN START ===')
+      console.log('Refreshing token for user:', userId)
+      
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET
 
+      console.log('Environment variables check:', {
+        hasClientId: !!clientId,
+        clientIdLength: clientId?.length || 0,
+        hasClientSecret: !!clientSecret,
+        clientSecretLength: clientSecret?.length || 0
+      })
+
       if (!clientId || !clientSecret) {
-        console.error('Missing Google OAuth credentials')
+        console.error('❌ Missing Google OAuth credentials')
         return false
       }
 
+      console.log('Step 1: Making token refresh request...')
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -110,14 +188,33 @@ export class CalendarServerService {
         }),
       })
 
+      console.log('Token refresh response:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      })
+
       if (!response.ok) {
-        console.error('Failed to refresh token:', response.status)
+        const errorText = await response.text()
+        console.error('❌ Failed to refresh token:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        })
         return false
       }
 
       const data = await response.json()
+      console.log('Token refresh response data:', {
+        hasAccessToken: !!data.access_token,
+        accessTokenLength: data.access_token?.length || 0,
+        expiresIn: data.expires_in,
+        tokenType: data.token_type,
+        scope: data.scope
+      })
       
       // Update tokens in Supabase
+      console.log('Step 2: Updating tokens in database...')
       const { error } = await supabase
         .from('gmail_tokens')
         .update({
@@ -128,14 +225,21 @@ export class CalendarServerService {
         .eq('user_id', userId)
 
       if (error) {
-        console.error('Error updating refreshed tokens:', error)
+        console.error('❌ Error updating refreshed tokens:', error)
         return false
       }
 
       console.log('✅ Access token refreshed successfully')
+      console.log('=== REFRESH ACCESS TOKEN SUCCESS ===')
       return true
     } catch (error) {
-      console.error('Error refreshing access token:', error)
+      console.error('=== REFRESH ACCESS TOKEN FAILED ===')
+      console.error('❌ Error refreshing access token:', error)
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      })
       return false
     }
   }
