@@ -591,9 +591,9 @@ export class CalendarService {
    */
   static async connectCalendar(): Promise<void> {
     try {
-      // Redirect to Google OAuth
+      // Redirect to Google OAuth for calendar
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-      const redirectUri = `${window.location.origin}/auth/gmail/callback`
+      const redirectUri = `${window.location.origin}/auth/calendar/callback`
       const scope = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly'
       
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +

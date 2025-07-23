@@ -34,9 +34,7 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@googleapis/calendar', 'googleapis', 'google-auth-library']
-  }
+  serverExternalPackages: ['@googleapis/calendar', 'googleapis', 'google-auth-library']
 };
 
 export default nextConfig;

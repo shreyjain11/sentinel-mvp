@@ -14,7 +14,9 @@ import {
   Key,
   Globe,
   User,
-  Shield
+  Shield,
+  Zap,
+  RotateCcw
 } from 'lucide-react'
 
 interface TokenInfo {
@@ -147,6 +149,53 @@ export default function DebugCalendarPage() {
       }
     } catch (error) {
       addDebugLog(`Calendar sync exception: ${error}`)
+    }
+  }
+
+  const testSyncProcess = async () => {
+    addDebugLog('Testing complete sync process...')
+    try {
+      const response = await fetch('/api/debug/test-sync-process', { method: 'POST' })
+      const data = await response.json()
+      
+      if (data.success) {
+        addDebugLog(`✅ Sync process successful: ${data.message}`)
+        addDebugLog(`Summary: ${data.summary.successfulEvents} events created, ${data.summary.failedEvents} failed`)
+        
+        // Add detailed logs
+        if (data.debugLogs) {
+          data.debugLogs.forEach((log: string) => {
+            addDebugLog(log)
+          })
+        }
+        
+        // Show detailed results
+        if (data.results) {
+          data.results.forEach((result: any) => {
+            if (result.success) {
+              addDebugLog(`✅ ${result.subscriptionName}: Event created (${result.eventId})`)
+            } else {
+              addDebugLog(`❌ ${result.subscriptionName}: Failed - ${result.error || 'Unknown error'}`)
+            }
+          })
+        }
+        
+        // Refresh subscription info
+        const subscriptionResponse = await fetch('/api/debug/subscriptions')
+        if (subscriptionResponse.ok) {
+          const subscriptionData = await subscriptionResponse.json()
+          setSubscriptionInfo(subscriptionData)
+        }
+      } else {
+        addDebugLog(`❌ Sync process failed: ${data.error}`)
+        if (data.debugLogs) {
+          data.debugLogs.forEach((log: string) => {
+            addDebugLog(log)
+          })
+        }
+      }
+    } catch (error) {
+      addDebugLog(`❌ Sync process exception: ${error}`)
     }
   }
 
@@ -491,13 +540,84 @@ export default function DebugCalendarPage() {
                 <Calendar className="w-4 h-4 mr-2" />
                 Test Calendar Sync
               </Button>
+              <Button onClick={testSyncProcess} variant="outline">
+                <Zap className="w-4 h-4 mr-2" />
+                Test Sync Process
+              </Button>
               <Button onClick={reconnectCalendar} variant="outline">
                 <Globe className="w-4 h-4 mr-2" />
                 Reconnect Calendar
               </Button>
+              <Button onClick={async () => {
+                addDebugLog('Manually triggering sync...')
+                try {
+                  const response = await fetch('/api/calendar/sync-all', { method: 'POST' })
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Manual sync successful: ${data.message}`)
+                    addDebugLog(`Result: ${data.result.success} successful, ${data.result.failed} failed`)
+                  } else {
+                    addDebugLog(`❌ Manual sync failed: ${data.error || data.message}`)
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Manual sync error: ${error}`)
+                }
+              }} variant="outline">
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Manual Sync
+              </Button>
+              <Button onClick={async () => {
+                addDebugLog('Testing complete calendar integration...')
+                try {
+                  const response = await fetch('/api/debug/test-calendar-integration', { method: 'POST' })
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Integration test successful: ${data.message}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  } else {
+                    addDebugLog(`❌ Integration test failed: ${data.error}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Integration test error: ${error}`)
+                }
+              }} variant="outline">
+                <Shield className="w-4 h-4 mr-2" />
+                Test Integration
+              </Button>
               <Button onClick={loadDebugInfo} variant="outline">
                 <Database className="w-4 h-4 mr-2" />
                 Reload Debug Info
+              </Button>
+              <Button onClick={async () => {
+                addDebugLog('Testing environment variables...')
+                try {
+                  const response = await fetch('/api/debug/env-test')
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Environment test successful`)
+                    addDebugLog(`Client ID: ${data.environment.NEXT_PUBLIC_GOOGLE_CLIENT_ID}`)
+                    addDebugLog(`Client Secret: ${data.environment.GOOGLE_CLIENT_SECRET}`)
+                    addDebugLog(`App URL: ${data.environment.NEXT_PUBLIC_APP_URL}`)
+                    addDebugLog(`Client ID length: ${data.clientIdLength}`)
+                    addDebugLog(`Client Secret length: ${data.clientSecretLength}`)
+                  } else {
+                    addDebugLog(`❌ Environment test failed: ${data.error}`)
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Environment test error: ${error}`)
+                }
+              }} variant="outline">
+                <Key className="w-4 h-4 mr-2" />
+                Test Env Vars
               </Button>
             </div>
           </CardContent>
