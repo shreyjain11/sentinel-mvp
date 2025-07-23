@@ -22,15 +22,15 @@ export class CalendarServerService {
     try {
       console.log('Creating calendar client for user:', userId)
       
-      // Get stored tokens from Supabase
+      // Get stored tokens from Supabase (simplified like the working test)
       const { data: tokens, error } = await supabase
         .from('gmail_tokens')
         .select('access_token, refresh_token, expires_at')
         .eq('user_id', userId)
         .single()
 
-      if (error || !tokens) {
-        console.error('No tokens found for user:', userId, error)
+      if (error || !tokens || !tokens.access_token) {
+        console.error('No valid tokens found for user:', userId, error)
         return null
       }
 
@@ -40,9 +40,11 @@ export class CalendarServerService {
         expiresAt: tokens.expires_at
       })
 
-      // Check if token is expired and refresh if needed
+      // Only refresh if token is actually expired
       const isExpired = tokens.expires_at && new Date(tokens.expires_at) <= new Date()
       console.log('Token expired check:', { isExpired, expiresAt: tokens.expires_at, currentTime: new Date().toISOString() })
+      
+      let accessToken = tokens.access_token
       
       if (isExpired && tokens.refresh_token) {
         console.log('Token expired, refreshing...')
@@ -52,26 +54,25 @@ export class CalendarServerService {
           return null
         }
         console.log('Token refreshed successfully')
+        
+        // Get the refreshed token
+        const { data: refreshedTokens } = await supabase
+          .from('gmail_tokens')
+          .select('access_token')
+          .eq('user_id', userId)
+          .single()
+        
+        if (refreshedTokens?.access_token) {
+          accessToken = refreshedTokens.access_token
+        }
       }
 
-      // Get the latest tokens after potential refresh
-      const { data: latestTokens, error: latestError } = await supabase
-        .from('gmail_tokens')
-        .select('access_token')
-        .eq('user_id', userId)
-        .single()
-
-      if (latestError || !latestTokens?.access_token) {
-        console.error('No valid access token found after refresh:', latestError)
-        return null
-      }
-
-      console.log('Using access token:', latestTokens.access_token.substring(0, 20) + '...')
+      console.log('Using access token:', accessToken.substring(0, 20) + '...')
 
       // Create Google Calendar client
       const auth = new google.auth.OAuth2()
       auth.setCredentials({
-        access_token: latestTokens.access_token
+        access_token: accessToken
       })
 
       const calendar = google.calendar({ version: 'v3', auth })
