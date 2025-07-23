@@ -532,6 +532,33 @@ export default function DebugCalendarPage() {
                 <Calendar className="w-4 h-4 mr-2" />
                 Test Calendar Connection
               </Button>
+              <Button onClick={async () => {
+                addDebugLog('Testing calendar connection thoroughly...')
+                try {
+                  const response = await fetch('/api/debug/test-calendar-connection', { method: 'POST' })
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Calendar connection test successful: ${data.message}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  } else {
+                    addDebugLog(`❌ Calendar connection test failed: ${data.error}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Calendar connection test error: ${error}`)
+                }
+              }} variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                Test Connection Thoroughly
+              </Button>
               <Button onClick={testTokenRefresh} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Test Token Refresh
@@ -592,6 +619,39 @@ export default function DebugCalendarPage() {
               }} variant="outline">
                 <Shield className="w-4 h-4 mr-2" />
                 Test Integration
+              </Button>
+              <Button onClick={async () => {
+                addDebugLog('Testing simple sync for one subscription...')
+                try {
+                  const response = await fetch('/api/debug/test-simple-sync', { method: 'POST' })
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Simple sync successful: ${data.message}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                    // Refresh subscription info
+                    const subscriptionResponse = await fetch('/api/debug/subscriptions')
+                    if (subscriptionResponse.ok) {
+                      const subscriptionData = await subscriptionResponse.json()
+                      setSubscriptionInfo(subscriptionData)
+                    }
+                  } else {
+                    addDebugLog(`❌ Simple sync failed: ${data.error}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Simple sync error: ${error}`)
+                }
+              }} variant="outline">
+                <Zap className="w-4 h-4 mr-2" />
+                Simple Sync Test
               </Button>
               <Button onClick={loadDebugInfo} variant="outline">
                 <Database className="w-4 h-4 mr-2" />

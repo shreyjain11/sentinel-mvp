@@ -398,9 +398,17 @@ export class CalendarServerService {
       const hasCalendarScope = tokens.scope && 
         tokens.scope.includes('https://www.googleapis.com/auth/calendar')
 
-      // Check if token is not expired
+      // Check if token is not expired (with 5 minute buffer)
       const isTokenValid = tokens.expires_at && 
-        new Date(tokens.expires_at) > new Date()
+        new Date(tokens.expires_at) > new Date(Date.now() + 5 * 60 * 1000)
+
+      console.log('Calendar connection check:', {
+        hasAccessToken: !!tokens.access_token,
+        hasCalendarScope,
+        isTokenValid,
+        expiresAt: tokens.expires_at,
+        currentTime: new Date().toISOString()
+      })
 
       return hasCalendarScope && isTokenValid
     } catch (error) {
