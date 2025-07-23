@@ -176,6 +176,13 @@ export default function DebugCalendarPage() {
     setDebugLogs([])
   }
 
+  const isCorruptedDate = (dateString: string | null | undefined): boolean => {
+    if (!dateString) return false
+    // Check for obviously corrupted dates like 0002, 0020, etc.
+    const year = parseInt(dateString.split('-')[0])
+    return year < 1900 || year > 2100
+  }
+
   const updateRenewalDate = async (subscriptionId: string, renewalDate: string) => {
     try {
       addDebugLog(`Updating renewal date for subscription ${subscriptionId} to ${renewalDate}`)
@@ -430,7 +437,7 @@ export default function DebugCalendarPage() {
                           <div><strong>{sub.name}</strong> - {sub.status}</div>
                           <div>Renewal: {sub.renewal_date || 'None'}</div>
                           <div>Calendar Event: {sub.calendar_event_id ? 'Yes' : 'No'}</div>
-                          {!sub.renewal_date && (
+                          {(!sub.renewal_date || isCorruptedDate(sub.renewal_date)) && (
                             <div className="mt-2">
                               <input
                                 type="date"
@@ -442,6 +449,11 @@ export default function DebugCalendarPage() {
                                   }
                                 }}
                               />
+                              {isCorruptedDate(sub.renewal_date) && (
+                                <div className="text-xs text-red-600 mt-1">
+                                  ⚠️ Corrupted date detected
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
