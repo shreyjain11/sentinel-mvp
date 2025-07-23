@@ -20,6 +20,8 @@ export class CalendarServerService {
    */
   static async createCalendarClient(userId: string): Promise<calendar_v3.Calendar | null> {
     try {
+      console.log('Creating calendar client for user:', userId)
+      
       // Get stored tokens from Supabase
       const { data: tokens, error } = await supabase
         .from('gmail_tokens')
@@ -28,12 +30,19 @@ export class CalendarServerService {
         .single()
 
       if (error || !tokens) {
-        console.error('No tokens found for user:', userId)
+        console.error('No tokens found for user:', userId, error)
         return null
       }
 
+      console.log('Found tokens:', {
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+        expiresAt: tokens.expires_at
+      })
+
       // Check if token is expired and refresh if needed
       const isExpired = tokens.expires_at && new Date(tokens.expires_at) <= new Date()
+      console.log('Token expired check:', { isExpired, expiresAt: tokens.expires_at, currentTime: new Date().toISOString() })
       
       if (isExpired && tokens.refresh_token) {
         console.log('Token expired, refreshing...')
@@ -42,19 +51,22 @@ export class CalendarServerService {
           console.error('Failed to refresh token')
           return null
         }
+        console.log('Token refreshed successfully')
       }
 
       // Get the latest tokens after potential refresh
-      const { data: latestTokens } = await supabase
+      const { data: latestTokens, error: latestError } = await supabase
         .from('gmail_tokens')
         .select('access_token')
         .eq('user_id', userId)
         .single()
 
-      if (!latestTokens?.access_token) {
-        console.error('No valid access token found')
+      if (latestError || !latestTokens?.access_token) {
+        console.error('No valid access token found after refresh:', latestError)
         return null
       }
+
+      console.log('Using access token:', latestTokens.access_token.substring(0, 20) + '...')
 
       // Create Google Calendar client
       const auth = new google.auth.OAuth2()
@@ -63,6 +75,7 @@ export class CalendarServerService {
       })
 
       const calendar = google.calendar({ version: 'v3', auth })
+      console.log('Calendar client created successfully')
       return calendar
     } catch (error) {
       console.error('Error creating calendar client:', error)

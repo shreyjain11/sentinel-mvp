@@ -653,6 +653,33 @@ export default function DebugCalendarPage() {
                 <Zap className="w-4 h-4 mr-2" />
                 Simple Sync Test
               </Button>
+              <Button onClick={async () => {
+                addDebugLog('Testing simple calendar API...')
+                try {
+                  const response = await fetch('/api/debug/test-simple-calendar', { method: 'POST' })
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Simple calendar test successful: ${data.message}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  } else {
+                    addDebugLog(`❌ Simple calendar test failed: ${data.error}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Simple calendar test error: ${error}`)
+                }
+              }} variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                Simple Calendar Test
+              </Button>
               <Button onClick={loadDebugInfo} variant="outline">
                 <Database className="w-4 h-4 mr-2" />
                 Reload Debug Info
