@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CalendarServerService } from '@/lib/calendar-server'
+import { CalendarServerServiceFixed } from '@/lib/calendar-server-fixed'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if calendar is connected
-    const isConnected = await CalendarServerService.isCalendarConnected()
+    const isConnected = await CalendarServerServiceFixed.isCalendarConnected(supabase)
     if (!isConnected) {
       return NextResponse.json({ 
         error: 'Calendar not connected',
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Sync all subscriptions
-    const result = await CalendarServerService.syncAllSubscriptions()
+    const result = await CalendarServerServiceFixed.syncAllSubscriptions(supabase)
 
     return NextResponse.json({
       success: true,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get sync status
-    const isConnected = await CalendarServerService.isCalendarConnected()
+    const isConnected = await CalendarServerServiceFixed.isCalendarConnected(supabase)
 
     return NextResponse.json({
       connected: isConnected,

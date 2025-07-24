@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { CalendarServerService } from '@/lib/calendar-server'
+import { CalendarServerServiceFixed } from '@/lib/calendar-server-fixed'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Check calendar connection
     addLog('Step 1: Checking calendar connection...')
-    const isConnected = await CalendarServerService.isCalendarConnected()
+    const isConnected = await CalendarServerServiceFixed.isCalendarConnected(supabase)
     addLog(`Calendar connected: ${isConnected}`)
 
     if (!isConnected) {
@@ -73,11 +73,12 @@ export async function POST(request: NextRequest) {
       addLog(`Renewal date: ${subscription.renewal_date}`)
 
       try {
-        const eventId = await CalendarServerService.createSubscriptionEvent(
+        const eventId = await CalendarServerServiceFixed.createSubscriptionEvent(
           subscription.id,
           subscription.name,
           subscription.renewal_date,
           'renewal',
+          supabase,
           {
             originalEmailSubject: subscription.source_email_id,
             cancelUrl: subscription.cancel_url,

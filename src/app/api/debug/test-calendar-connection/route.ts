@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { CalendarServerService } from '@/lib/calendar-server'
+import { CalendarServerServiceFixed } from '@/lib/calendar-server-fixed'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,25 +21,43 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Check basic connection status
     addLog('Step 1: Checking basic connection status...')
-    const isConnected = await CalendarServerService.isCalendarConnected()
+    const isConnected = await CalendarServerServiceFixed.isCalendarConnected(supabase)
     addLog(`Basic connection check: ${isConnected}`)
 
     // Step 2: Try to create a calendar client
     addLog('Step 2: Testing calendar client creation...')
-    const calendar = await CalendarServerService.createCalendarClient(session.user.id)
-    if (!calendar) {
-      addLog('❌ Failed to create calendar client')
+    addLog(`User ID: ${session.user.id}`)
+    
+    let calendar: any = null
+    
+    try {
+      addLog('Calling createCalendarClient...')
+      calendar = await CalendarServerServiceFixed.createCalendarClient(session.user.id, supabase)
+      addLog(`createCalendarClient returned: ${calendar ? 'success' : 'null'}`)
+      
+      if (!calendar) {
+        addLog('❌ Failed to create calendar client - returned null')
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to create calendar client',
+          debugLogs
+        })
+      }
+      addLog('✅ Calendar client created successfully')
+    } catch (calendarError) {
+      addLog(`❌ Exception in createCalendarClient: ${calendarError}`)
+      addLog(`Error details: ${calendarError instanceof Error ? calendarError.message : 'Unknown error'}`)
       return NextResponse.json({
         success: false,
-        error: 'Failed to create calendar client',
+        error: 'Exception creating calendar client',
+        details: calendarError instanceof Error ? calendarError.message : 'Unknown error',
         debugLogs
       })
     }
-    addLog('✅ Calendar client created successfully')
 
     // Step 3: Test getting user calendar
     addLog('Step 3: Testing user calendar access...')
-    const calendarId = await CalendarServerService.getUserCalendar(session.user.id)
+    const calendarId = await CalendarServerServiceFixed.getUserCalendar(session.user.id, supabase)
     if (!calendarId) {
       addLog('❌ Failed to get/create user calendar')
       return NextResponse.json({
