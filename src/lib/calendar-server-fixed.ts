@@ -93,23 +93,34 @@ export class CalendarServerServiceFixed {
    */
   static async getUserCalendar(userId: string, supabase: SupabaseClient): Promise<string | null> {
     try {
-      const calendar = await this.createCalendarClient(userId, supabase)
-      if (!calendar) return null
-
-      // Check if user already has a dedicated calendar
-      const { data: existingCalendar } = await supabase
+      console.log(`Getting calendar for user: ${userId}`)
+      
+      // First, try to find existing calendar in database
+      const { data: existingCalendar, error: dbError } = await supabase
         .from('user_calendars')
-        .select('calendar_id')
+        .select('calendar_id, calendar_name')
         .eq('user_id', userId)
         .single()
 
+      if (dbError && dbError.code !== 'PGRST116') {
+        console.error('Database error checking for existing calendar:', dbError)
+      }
+
       if (existingCalendar?.calendar_id) {
-        console.log(`✅ Using existing calendar: ${existingCalendar.calendar_id}`)
+        console.log(`✅ Found existing calendar in database: ${existingCalendar.calendar_id}`)
         return existingCalendar.calendar_id
       }
 
+      console.log('No existing calendar found, creating new one...')
+
+      // Create calendar client
+      const calendar = await this.createCalendarClient(userId, supabase)
+      if (!calendar) {
+        console.error('Failed to create calendar client for new calendar')
+        return null
+      }
+
       // Create new dedicated calendar
-      console.log('Creating new dedicated calendar...')
       const calendarName = `Sentinel Subscriptions - ${new Date().getFullYear()}`
       const calendarResource = {
         summary: calendarName,
@@ -117,20 +128,22 @@ export class CalendarServerServiceFixed {
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
       }
 
+      console.log('Creating new Google Calendar...')
       const response = await calendar.calendars.insert({
         requestBody: calendarResource
       })
 
       if (!response.data.id) {
-        console.error('Failed to create calendar')
+        console.error('Failed to create calendar - no ID returned')
         return null
       }
 
       const calendarId = response.data.id
-      console.log(`✅ Created new calendar: ${calendarId}`)
+      console.log(`✅ Created new Google Calendar: ${calendarId}`)
 
-      // Store calendar ID in database
-      const { error } = await supabase
+      // Store calendar ID in database with error handling
+      console.log('Storing calendar ID in database...')
+      const { error: insertError } = await supabase
         .from('user_calendars')
         .insert({
           user_id: userId,
@@ -139,12 +152,14 @@ export class CalendarServerServiceFixed {
           created_at: new Date().toISOString()
         })
 
-      if (error) {
-        console.error('Error storing calendar ID:', error)
+      if (insertError) {
+        console.error('Error storing calendar ID in database:', insertError)
+        console.log('Calendar was created in Google but not stored in database')
         // Still return the calendar ID even if storage fails
         return calendarId
       }
 
+      console.log(`✅ Successfully stored calendar ID in database`)
       return calendarId
     } catch (error) {
       console.error('Error getting user calendar:', error)
@@ -153,13 +168,15 @@ export class CalendarServerServiceFixed {
   }
 
   /**
-   * Create a calendar event for a subscription
+   * Create a calendar event for a subscription (with pre-existing calendar client)
    */
-  static async createSubscriptionEvent(
+  static async createSubscriptionEventWithCalendar(
     subscriptionId: string,
     subscriptionName: string,
     eventDate: string,
     eventType: 'renewal' | 'trial_end',
+    calendarId: string,
+    calendar: calendar_v3.Calendar,
     supabase: SupabaseClient,
     metadata?: {
       originalEmailSubject?: string
@@ -169,28 +186,7 @@ export class CalendarServerServiceFixed {
     }
   ): Promise<string | null> {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        console.error('No active session')
-        return null
-      }
-
-      const userId = session.user.id
       console.log(`Creating event for subscription: ${subscriptionName} (${subscriptionId})`)
-
-      // Get user's dedicated calendar
-      const calendarId = await this.getUserCalendar(userId, supabase)
-      if (!calendarId) {
-        console.error('Failed to get user calendar')
-        return null
-      }
-
-      // Create calendar client
-      const calendar = await this.createCalendarClient(userId, supabase)
-      if (!calendar) {
-        console.error('Failed to create calendar client')
-        return null
-      }
 
       // Prepare event details
       const title = eventType === 'renewal' 
@@ -270,6 +266,63 @@ export class CalendarServerServiceFixed {
   }
 
   /**
+   * Create a calendar event for a subscription
+   */
+  static async createSubscriptionEvent(
+    subscriptionId: string,
+    subscriptionName: string,
+    eventDate: string,
+    eventType: 'renewal' | 'trial_end',
+    supabase: SupabaseClient,
+    metadata?: {
+      originalEmailSubject?: string
+      cancelUrl?: string
+      amount?: number
+      currency?: string
+    }
+  ): Promise<string | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.error('No active session')
+        return null
+      }
+
+      const userId = session.user.id
+      console.log(`Creating event for subscription: ${subscriptionName} (${subscriptionId})`)
+
+      // Get user's dedicated calendar
+      const calendarId = await this.getUserCalendar(userId, supabase)
+      if (!calendarId) {
+        console.error('Failed to get user calendar')
+        return null
+      }
+
+      // Create calendar client
+      const calendar = await this.createCalendarClient(userId, supabase)
+      if (!calendar) {
+        console.error('Failed to create calendar client')
+        return null
+      }
+
+      // Use the optimized method
+      return await this.createSubscriptionEventWithCalendar(
+        subscriptionId,
+        subscriptionName,
+        eventDate,
+        eventType,
+        calendarId,
+        calendar,
+        supabase,
+        metadata
+      )
+    } catch (error) {
+      console.error('Error creating subscription calendar event:', error)
+      return null
+    }
+  }
+
+  /**
    * Sync all confirmed subscriptions to calendar
    */
   static async syncAllSubscriptions(supabase: SupabaseClient): Promise<{ success: number; failed: number }> {
@@ -279,6 +332,24 @@ export class CalendarServerServiceFixed {
 
       const userId = session.user.id
       console.log(`Syncing subscriptions for user: ${userId}`)
+
+      // Get user's calendar ID once (reuse for all subscriptions)
+      console.log('Getting user calendar ID...')
+      const calendarId = await this.getUserCalendar(userId, supabase)
+      if (!calendarId) {
+        console.error('Failed to get user calendar')
+        return { success: 0, failed: 0 }
+      }
+      console.log(`✅ Using calendar: ${calendarId}`)
+
+      // Create calendar client once (reuse for all subscriptions)
+      console.log('Creating calendar client...')
+      const calendar = await this.createCalendarClient(userId, supabase)
+      if (!calendar) {
+        console.error('Failed to create calendar client')
+        return { success: 0, failed: 0 }
+      }
+      console.log('✅ Calendar client ready')
 
       // Get all subscriptions without calendar events
       const { data: subscriptions, error } = await supabase
@@ -301,11 +372,13 @@ export class CalendarServerServiceFixed {
         try {
           // Create renewal event if renewal_date exists
           if (subscription.renewal_date) {
-            const eventId = await this.createSubscriptionEvent(
+            const eventId = await this.createSubscriptionEventWithCalendar(
               subscription.id,
               subscription.name,
               subscription.renewal_date,
               'renewal',
+              calendarId,
+              calendar,
               supabase,
               {
                 originalEmailSubject: subscription.source_email_id,
@@ -325,11 +398,13 @@ export class CalendarServerServiceFixed {
 
           // Create trial end event if trial_end_date exists
           if (subscription.trial_end_date) {
-            const eventId = await this.createSubscriptionEvent(
+            const eventId = await this.createSubscriptionEventWithCalendar(
               subscription.id,
               subscription.name,
               subscription.trial_end_date,
               'trial_end',
+              calendarId,
+              calendar,
               supabase,
               {
                 originalEmailSubject: subscription.source_email_id,

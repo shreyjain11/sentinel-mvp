@@ -16,7 +16,8 @@ import {
   User,
   Shield,
   Zap,
-  RotateCcw
+  RotateCcw,
+  Trash2
 } from 'lucide-react'
 
 interface TokenInfo {
@@ -592,6 +593,37 @@ export default function DebugCalendarPage() {
               }} variant="outline">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Manual Sync
+              </Button>
+              <Button onClick={async () => {
+                addDebugLog('Cleaning up duplicate calendars...')
+                try {
+                  const response = await fetch('/api/debug/cleanup-calendars', { method: 'POST' })
+                  const data = await response.json()
+                  if (response.ok) {
+                    addDebugLog(`✅ Calendar cleanup successful: ${data.message}`)
+                    if (data.deletedCount > 0) {
+                      addDebugLog(`Deleted ${data.deletedCount} duplicate calendars`)
+                      addDebugLog(`Kept calendar: ${data.keptCalendar?.summary}`)
+                    }
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  } else {
+                    addDebugLog(`❌ Calendar cleanup failed: ${data.error}`)
+                    if (data.debugLogs) {
+                      data.debugLogs.forEach((log: string) => {
+                        addDebugLog(log)
+                      })
+                    }
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Calendar cleanup error: ${error}`)
+                }
+              }} variant="outline">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Cleanup Duplicate Calendars
               </Button>
               <Button onClick={async () => {
                 addDebugLog('Testing complete calendar integration...')

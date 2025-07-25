@@ -27,23 +27,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse the email using our AI-powered parser
+    // Parse the email using our enhanced parser
     const parsedData = await EmailParser.parseEmail(email)
 
     // If subscription was found and confirmed, create calendar events
-    if (parsedData && parsedData.confidence > 0.7 && parsedData.service_name) {
+    if (parsedData && parsedData.confidence > 0.7 && parsedData.service_name && !parsedData.review) {
       try {
         // Convert ParsedEmailData to ParsedSubscription format
         const parsedSubscription = {
-          serviceName: parsedData.service_name,
-          type: parsedData.subscription_type || 'subscription',
-          amount: parsedData.amount,
-          currency: parsedData.currency || 'USD',
+          serviceName: parsedData.service_name.value,
+          type: (parsedData.trial_end ? 'trial' : 'subscription') as 'trial' | 'subscription',
+          amount: undefined, // Not extracted in new parser
+          currency: 'USD', // Default
           billingCycle: 'monthly', // Default
           startDate: new Date().toISOString().split('T')[0],
-          endDate: parsedData.renewal_date || new Date().toISOString().split('T')[0],
-          trialEndDate: parsedData.trial_end,
-          renewalDate: parsedData.renewal_date,
+          endDate: parsedData.renewal || parsedData.first_charge || new Date().toISOString().split('T')[0],
+          trialEndDate: parsedData.trial_end || undefined,
+          renewalDate: parsedData.renewal || parsedData.first_charge || undefined,
           cancelUrl: undefined,
           confidence: parsedData.confidence,
           sourceEmailId: email.id
@@ -105,6 +105,11 @@ export async function POST(request: NextRequest) {
         console.error('Error creating subscription or calendar events:', subscriptionError)
         // Continue with email parsing even if subscription creation fails
       }
+    } else if (parsedData?.review) {
+      console.log(`⚠️ Email flagged for review: ${email.subject}`)
+      console.log(`   Confidence: ${parsedData.confidence}`)
+      console.log(`   Service: ${parsedData.service_name?.value || 'Unknown'}`)
+      console.log(`   Matched phrases: ${parsedData.matched_phrases.join(', ')}`)
     }
 
     return NextResponse.json({
