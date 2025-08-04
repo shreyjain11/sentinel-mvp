@@ -32,7 +32,7 @@ export interface Subscription {
   source_email_id?: string
   cancel_url?: string
   confidence_score?: number
-  created_by?: 'manual' | 'ai' | 'import'
+  created_by?: 'manual' | 'ai' | 'import' | 'extension'
   parsed_data?: any
   created_at: string
   updated_at: string

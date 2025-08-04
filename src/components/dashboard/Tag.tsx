@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 
 interface TagProps {
-  variant: 'trial' | 'subscription' | 'active' | 'cancelled' | 'expired' | 'ai' | 'no-contract' | 'manual-only' | 'risk-safe' | 'risk-medium' | 'risk-high'
+  variant: 'trial' | 'subscription' | 'active' | 'cancelled' | 'expired' | 'ai' | 'extension' | 'no-contract' | 'manual-only' | 'risk-safe' | 'risk-medium' | 'risk-high'
   children: React.ReactNode
   className?: string
 }
@@ -20,6 +20,7 @@ export function Tag({ variant, children, className }: TagProps) {
           'tag-cancelled': variant === 'cancelled',
           'tag-expired': variant === 'expired',
           'tag-ai': variant === 'ai',
+          'tag-extension': variant === 'extension',
           'tag-no-contract': variant === 'no-contract',
           'tag-manual-only': variant === 'manual-only',
           'tag-risk-safe': variant === 'risk-safe',

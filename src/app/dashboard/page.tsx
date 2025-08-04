@@ -217,6 +217,9 @@ export default function DashboardPage() {
     const daysUntil = getDaysUntil(sub.end_date)
     return daysUntil <= 7 && daysUntil > 0
   }).length
+  const extensionDetections = subscriptions.filter(sub => sub.created_by === 'extension').length
+  const aiDetections = subscriptions.filter(sub => sub.created_by === 'ai').length
+  const manualSubscriptions = subscriptions.filter(sub => sub.created_by === 'manual').length
 
   if (loading) {
     return (
@@ -398,6 +401,33 @@ export default function DashboardPage() {
           />
         </div>
 
+        {/* Detection Method Stats */}
+        {(extensionDetections > 0 || aiDetections > 0 || manualSubscriptions > 0) && (
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
+            <StatCard
+              title="Extension Detections"
+              value={extensionDetections}
+              description="Detected by browser extension"
+              icon={Eye}
+              className="border-orange-500/20 bg-orange-500/5"
+            />
+            <StatCard
+              title="AI Detections"
+              value={aiDetections}
+              description="Detected by AI from emails"
+              icon={Brain}
+              className="border-purple-500/20 bg-purple-500/5"
+            />
+            <StatCard
+              title="Manual Entries"
+              value={manualSubscriptions}
+              description="Added manually"
+              icon={Plus}
+              className="border-blue-500/20 bg-blue-500/5"
+            />
+          </div>
+        )}
+
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Subscriptions List */}
@@ -538,6 +568,9 @@ export default function DashboardPage() {
                                     {subscription.created_by === 'ai' && (
                                       <Tag variant="ai">AI</Tag>
                                     )}
+                                    {subscription.created_by === 'extension' && (
+                                      <Tag variant="extension">Extension</Tag>
+                                    )}
                                     {/* Trust badges */}
                                     <Tag variant="no-contract">No Contracts</Tag>
                                     <Tag variant="manual-only">Manual Only</Tag>
@@ -614,6 +647,40 @@ export default function DashboardPage() {
                                   {subscription.created_by === 'ai' && (
                                     <div className="mt-3">
                                       <TransparencyPanel subscription={subscription} />
+                                    </div>
+                                  )}
+
+                                  {/* Extension Detection Details */}
+                                  {subscription.created_by === 'extension' && subscription.parsed_data?.extension_detection && (
+                                    <div className="mt-3 p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
+                                      <div className="flex items-center space-x-2 mb-2">
+                                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                        <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                                          Detected by Extension
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-muted-foreground space-y-1">
+                                        <div>Domain: {subscription.parsed_data.extension_detection.domain}</div>
+                                        <div>Confidence: {Math.round((subscription.parsed_data.extension_detection.confidence || 0) * 100)}%</div>
+                                        <div>Detected: {new Date(subscription.parsed_data.extension_detection.timestamp).toLocaleString()}</div>
+                                        {subscription.parsed_data.extension_detection.extracted_info && (
+                                          <div className="mt-2 pt-2 border-t border-orange-500/20">
+                                            <div className="font-medium text-orange-700 dark:text-orange-300 mb-1">Extracted Information:</div>
+                                            {subscription.parsed_data.extension_detection.extracted_info.trialLength && (
+                                              <div>Trial: {subscription.parsed_data.extension_detection.extracted_info.trialLength}</div>
+                                            )}
+                                            {subscription.parsed_data.extension_detection.extracted_info.price && (
+                                              <div>Price: {subscription.parsed_data.extension_detection.extracted_info.price}</div>
+                                            )}
+                                            {subscription.parsed_data.extension_detection.extracted_info.planType && (
+                                              <div>Plan: {subscription.parsed_data.extension_detection.extracted_info.planType}</div>
+                                            )}
+                                            {subscription.parsed_data.extension_detection.extracted_info.startDate && (
+                                              <div>Start: {subscription.parsed_data.extension_detection.extracted_info.startDate}</div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
