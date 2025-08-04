@@ -316,7 +316,7 @@ export default function TestOAuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
+                            <div className="bg-card text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
               {results.length === 0 ? (
                 <p>No test results yet. Click "Run All Tests" to start.</p>
               ) : (

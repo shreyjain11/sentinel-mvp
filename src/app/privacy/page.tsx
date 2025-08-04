@@ -189,8 +189,8 @@ export default function PrivacyPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading privacy controls...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading privacy controls...</p>
         </div>
       </div>
     )
@@ -199,11 +199,11 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm">
+              <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Dashboard</span>
               </Link>
@@ -211,9 +211,9 @@ export default function PrivacyPage() {
             
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+                                  <Shield className="w-5 h-5 text-card-foreground" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Sentinel</span>
+                              <span className="text-xl font-bold text-foreground">Sentinel</span>
             </div>
           </div>
         </div>
@@ -222,8 +222,8 @@ export default function PrivacyPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy & Data Control</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Privacy & Data Control</h1>
+          <p className="text-muted-foreground">
             Manage your data privacy settings and exercise your data rights
           </p>
         </div>
@@ -242,13 +242,13 @@ export default function PrivacyPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{dataStats.subscriptions}</div>
-                  <div className="text-sm text-gray-600">Subscriptions</div>
+                <div className="text-center p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <div className="text-2xl font-bold text-primary">{dataStats.subscriptions}</div>
+                  <div className="text-sm text-muted-foreground">Subscriptions</div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-center p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">{dataStats.notifications}</div>
-                  <div className="text-sm text-gray-600">Notifications</div>
+                  <div className="text-sm text-muted-foreground">Notifications</div>
                 </div>
               </div>
 
@@ -318,7 +318,7 @@ export default function PrivacyPage() {
                       <Download className="w-4 h-4" />
                       <span>Export Your Data</span>
                     </h4>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Download all your data in JSON format (GDPR Article 20)
                     </p>
                   </div>
@@ -348,7 +348,7 @@ export default function PrivacyPage() {
                   <Calendar className="w-4 h-4" />
                   <span>Data Retention</span>
                 </h4>
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-muted-foreground space-y-1">
                   <p>• Account data: Until account deletion</p>
                   <p>• Notification history: 90 days</p>
                   <p>• Gmail tokens: Until disconnected</p>
@@ -392,17 +392,17 @@ export default function PrivacyPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="p-4 border border-red-200 rounded-lg bg-white">
+              <div className="p-4 border border-red-200 rounded-lg bg-card">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h4 className="font-medium text-red-800 flex items-center space-x-2">
+                    <h4 className="font-medium text-red-800 dark:text-red-400 flex items-center space-x-2">
                       <Trash2 className="w-4 h-4" />
                       <span>Delete All Data</span>
                     </h4>
-                    <p className="text-sm text-red-700 mt-1">
+                    <p className="text-sm text-red-700 dark:text-red-400 mt-1">
                       Permanently delete your account and all associated data. This action cannot be undone.
                     </p>
-                    <div className="mt-3 text-xs text-red-600 space-y-1">
+                    <div className="mt-3 text-xs text-red-600 dark:text-red-400 space-y-1">
                       <p>• All subscriptions and notifications will be deleted</p>
                       <p>• Calendar events will be removed</p>
                       <p>• Gmail access will be revoked</p>
@@ -422,8 +422,8 @@ export default function PrivacyPage() {
                   </Button>
                 ) : (
                   <div className="space-y-3">
-                    <div className="p-3 bg-red-100 border border-red-200 rounded-md">
-                      <p className="text-sm font-medium text-red-800 mb-2">
+                    <div className="p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-400 mb-2">
                         ⚠️ Are you absolutely sure?
                       </p>
                       <p className="text-xs text-red-700">
@@ -476,7 +476,7 @@ export default function PrivacyPage() {
             <div className="grid md:grid-cols-2 gap-6 text-sm">
               <div>
                 <h4 className="font-medium mb-2">GDPR Rights (EU Users)</h4>
-                <ul className="space-y-1 text-gray-600">
+                <ul className="space-y-1 text-muted-foreground">
                   <li>• Right to access (Article 15)</li>
                   <li>• Right to rectification (Article 16)</li>
                   <li>• Right to erasure (Article 17)</li>
@@ -486,7 +486,7 @@ export default function PrivacyPage() {
               
               <div>
                 <h4 className="font-medium mb-2">CCPA Rights (California Users)</h4>
-                <ul className="space-y-1 text-gray-600">
+                <ul className="space-y-1 text-muted-foreground">
                   <li>• Right to know about data collection</li>
                   <li>• Right to delete personal information</li>
                   <li>• Right to opt-out of sale (N/A - we don't sell data)</li>
@@ -495,11 +495,13 @@ export default function PrivacyPage() {
               </div>
             </div>
             
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Questions about privacy?</strong> Contact us at privacy@sentinel.app or review our 
+                <strong>Questions about privacy?</strong> Contact us at usesentinel@gmail.com or review our 
                 <a href="/privacy-policy" className="underline ml-1">Privacy Policy</a> and 
-                <a href="/terms" className="underline ml-1">Terms of Service</a>.
+                <a href="/terms" className="underline ml-1">Terms of Service</a>. 
+                Learn more about our ethical commitments on our 
+                <Link href="/ethics" className="underline ml-1">Ethics page</Link>.
               </p>
             </div>
           </CardContent>

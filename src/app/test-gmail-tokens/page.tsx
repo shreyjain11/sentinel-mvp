@@ -38,8 +38,8 @@ export default function TestGmailTokensPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Gmail Tokens Table Test</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-foreground mb-4">Gmail Tokens Table Test</h1>
+            <p className="text-muted-foreground">
               This page helps you test if the Gmail tokens table is properly set up and accessible.
             </p>
           </div>
@@ -92,15 +92,15 @@ export default function TestGmailTokensPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Status:</label>
+                        <label className="text-sm font-medium text-muted-foreground">Status:</label>
                         <Badge variant={testResult.success ? "default" : "destructive"} className="mt-1">
                           {testResult.success ? 'Success' : 'Failed'}
                         </Badge>
                       </div>
                       {testResult.userId && (
                         <div>
-                          <label className="text-sm font-medium text-gray-600">User ID:</label>
-                          <p className="text-sm bg-gray-100 p-2 rounded mt-1 font-mono">
+                          <label className="text-sm font-medium text-muted-foreground">User ID:</label>
+                          <p className="text-sm bg-muted p-2 rounded mt-1 font-mono">
                             {testResult.userId}
                           </p>
                         </div>
@@ -109,8 +109,8 @@ export default function TestGmailTokensPage() {
 
                     {testResult.message && (
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Message:</label>
-                        <p className="text-sm bg-gray-100 p-2 rounded mt-1">
+                        <label className="text-sm font-medium text-muted-foreground">Message:</label>
+                        <p className="text-sm bg-muted p-2 rounded mt-1">
                           {testResult.message}
                         </p>
                       </div>
@@ -127,8 +127,8 @@ export default function TestGmailTokensPage() {
 
                     {testResult.details && (
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Details:</label>
-                        <p className="text-sm bg-gray-100 p-2 rounded mt-1 font-mono text-xs">
+                        <label className="text-sm font-medium text-muted-foreground">Details:</label>
+                        <p className="text-sm bg-muted p-2 rounded mt-1 font-mono text-xs">
                           {testResult.details}
                         </p>
                       </div>
@@ -136,8 +136,8 @@ export default function TestGmailTokensPage() {
 
                     {testResult.code && (
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Error Code:</label>
-                        <p className="text-sm bg-gray-100 p-2 rounded mt-1 font-mono">
+                        <label className="text-sm font-medium text-muted-foreground">Error Code:</label>
+                        <p className="text-sm bg-muted p-2 rounded mt-1 font-mono">
                           {testResult.code}
                         </p>
                       </div>

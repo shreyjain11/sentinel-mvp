@@ -257,23 +257,23 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading calendar...</p>
+          <RefreshCw className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading calendar...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Dashboard</span>
               </Link>
@@ -281,9 +281,9 @@ export default function CalendarPage() {
             
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+                                  <Shield className="w-5 h-5 text-card-foreground" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Sentinel</span>
+              <span className="text-xl font-bold text-foreground">Sentinel</span>
             </div>
           </div>
         </div>
@@ -292,8 +292,8 @@ export default function CalendarPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Calendar Integration</h1>
-          <p className="text-gray-600">
+                          <h1 className="text-3xl font-bold text-foreground mb-2">Calendar Integration</h1>
+                <p className="text-muted-foreground">
             Sync your subscription renewals and trial end dates with Google Calendar
           </p>
         </div>
@@ -383,7 +383,7 @@ export default function CalendarPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-medium">Auto-sync new subscriptions</Label>
-                    <p className="text-xs text-gray-600">Automatically sync new confirmed subscriptions to calendar</p>
+                    <p className="text-xs text-muted-foreground">Automatically sync new confirmed subscriptions to calendar</p>
                   </div>
                   <Switch 
                     checked={preferences.autoSync}
@@ -394,7 +394,7 @@ export default function CalendarPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-medium">Sync trial endings</Label>
-                    <p className="text-xs text-gray-600">Create calendar events for trial end dates</p>
+                    <p className="text-xs text-muted-foreground">Create calendar events for trial end dates</p>
                   </div>
                   <Switch 
                     checked={preferences.syncTrials}
@@ -405,7 +405,7 @@ export default function CalendarPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-medium">Sync renewals</Label>
-                    <p className="text-xs text-gray-600">Create calendar events for subscription renewals</p>
+                    <p className="text-xs text-muted-foreground">Create calendar events for subscription renewals</p>
                   </div>
                   <Switch 
                     checked={preferences.syncRenewals}
@@ -416,7 +416,7 @@ export default function CalendarPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-medium">Show canceled subscriptions</Label>
-                    <p className="text-xs text-gray-600">Include canceled subscriptions in calendar events</p>
+                    <p className="text-xs text-muted-foreground">Include canceled subscriptions in calendar events</p>
                   </div>
                   <Switch 
                     checked={preferences.showCanceled}
@@ -460,7 +460,7 @@ export default function CalendarPage() {
                   <div className="w-4 h-4 rounded-full bg-blue-500"></div>
                   <div>
                     <h3 className="font-medium">Sentinel Calendar</h3>
-                    <p className="text-sm text-gray-600">Your dedicated subscription calendar</p>
+                    <p className="text-sm text-muted-foreground">Your dedicated subscription calendar</p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
@@ -500,8 +500,8 @@ export default function CalendarPage() {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CalendarIcon className="w-8 h-8 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions synced yet</h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                <h3 className="text-lg font-medium text-foreground mb-2">No subscriptions synced yet</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Start by parsing emails or syncing your existing subscriptions to see them here.
                 </p>
                 <div className="flex justify-center space-x-3">
@@ -534,14 +534,14 @@ export default function CalendarPage() {
                   const isPast = daysUntil < 0
                   
                   return (
-                    <div key={event.id} className="group relative p-4 border rounded-lg hover:bg-gray-50 transition-all duration-200 hover:shadow-sm">
+                    <div key={event.id} className="group relative p-4 border rounded-lg hover:bg-muted transition-all duration-200 hover:shadow-sm">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-3">
                             <span className="text-2xl">{getServiceIcon(event.title)}</span>
                             <div className="flex-1">
-                              <h3 className="font-medium text-gray-900">{event.title}</h3>
-                              <p className="text-sm text-gray-600">{event.description}</p>
+                              <h3 className="font-medium text-foreground">{event.title}</h3>
+                              <p className="text-sm text-muted-foreground">{event.description}</p>
                             </div>
                           </div>
                           
@@ -566,7 +566,7 @@ export default function CalendarPage() {
                             )}
                           </div>
                           
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                             <div className="flex items-center space-x-1">
                               <CalendarIcon className="w-4 h-4" />
                               <span>{formatDate(event.start)}</span>
@@ -602,7 +602,7 @@ export default function CalendarPage() {
                 
                 {events.length > 10 && (
                   <div className="text-center pt-4">
-                    <Button variant="outline" className="text-gray-600">
+                                                <Button variant="outline" className="text-muted-foreground">
                       <ChevronDown className="w-4 h-4 mr-2" />
                       Show {events.length - 10} more events
                     </Button>

@@ -50,7 +50,7 @@ export default function TestDebugCookiesPage() {
           {/* All Cookies */}
           <div className="border rounded p-4">
             <h4 className="font-semibold mb-2">All Browser Cookies:</h4>
-            <div className="text-sm bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                            <div className="text-sm bg-muted p-2 rounded overflow-auto max-h-40">
               {cookies ? (
                 <pre>{cookies}</pre>
               ) : (

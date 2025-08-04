@@ -56,55 +56,55 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Back to Home */}
-        <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-8">
+        <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Link>
 
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center mr-3">
-              <Shield className="w-7 h-7 text-white" />
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-premium-purple rounded-xl flex items-center justify-center mr-4">
+                                <Shield className="w-8 h-8 text-card-foreground" />
             </div>
-            <span className="text-3xl font-bold text-gray-900">Sentinel</span>
+            <span className="text-4xl font-bold text-foreground">Sentinel</span>
           </div>
-          <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20">
             Privacy-First Authentication
-          </span>
+          </div>
         </div>
 
         {/* Auth Card */}
-        <Card className="trust-card">
+        <Card className="premium-card-hero">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome to Sentinel</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-bold text-foreground">Welcome to Sentinel</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Sign in with your Google account to start managing your subscriptions securely.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <Button 
               onClick={handleGoogleSignIn} 
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full premium-button"
               size="lg"
             >
               <Mail className="w-5 h-5 mr-2" />
               {loading ? 'Signing in...' : 'Continue with Google'}
             </Button>
             
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               By continuing, you agree to our{' '}
-              <Link href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
+              <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
               {' '}and{' '}
-              <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>.
+              <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>.
             </p>
             
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-center text-sm text-gray-600">
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center justify-center text-sm text-muted-foreground">
                 <Shield className="w-4 h-4 mr-2" />
                 Your data is encrypted and never shared with third parties
               </div>
@@ -114,12 +114,12 @@ export default function AuthPage() {
 
         {/* Debug Info (only in development) */}
         {process.env.NODE_ENV === 'development' && debugInfo.length > 0 && (
-          <Card className="mt-4">
+          <Card className="mt-6 premium-card">
             <CardHeader>
-              <CardTitle className="text-sm">Debug Info</CardTitle>
+              <CardTitle className="text-sm text-foreground">Debug Info</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xs font-mono bg-gray-100 p-2 rounded max-h-32 overflow-y-auto">
+              <div className="text-xs font-mono bg-muted p-3 rounded-lg max-h-32 overflow-y-auto text-muted-foreground">
                 {debugInfo.map((info, index) => (
                   <div key={index} className="mb-1">{info}</div>
                 ))}
@@ -130,8 +130,8 @@ export default function AuthPage() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-gray-600">
-            Need help? <Link href="/support" className="text-blue-600 hover:underline">Contact Support</Link>
+          <p className="text-sm text-muted-foreground">
+            Need help? <Link href="/support" className="text-primary hover:underline">Contact Support</Link>
           </p>
         </div>
       </div>

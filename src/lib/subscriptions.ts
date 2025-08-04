@@ -523,7 +523,7 @@ export class SubscriptionService {
     }
   }
 
-  private static getCategoryFromService(serviceName: string): string {
+  static getCategoryFromService(serviceName: string): string {
     const service = serviceName.toLowerCase()
     
     if (['netflix', 'spotify', 'youtube', 'disney', 'hulu', 'apple'].includes(service)) {
@@ -540,5 +540,35 @@ export class SubscriptionService {
     }
     
     return 'Other'
+  }
+
+  static async findDuplicateByService(userId: string, serviceName: string): Promise<Subscription | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return null
+
+      // Look for existing subscription with same service (within last 7 days to avoid old cancelled ones)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('service', serviceName)
+        .eq('status', 'active')
+        .gte('created_at', sevenDaysAgo.toISOString())
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking for service duplicates:', error)
+        return null
+      }
+
+      return data || null
+    } catch (error) {
+      console.error('Error finding duplicate by service:', error)
+      return null
+    }
   }
 } 

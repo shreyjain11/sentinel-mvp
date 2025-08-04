@@ -96,10 +96,10 @@ export default function DebugOAuthRedirectPage() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h4 className="font-medium text-green-900 mb-2">Add these URIs to Google Cloud Console:</h4>
                   <div className="space-y-2">
-                    <div className="bg-white p-2 rounded border font-mono text-sm">
+                    <div className="bg-card p-2 rounded border font-mono text-sm">
                       http://localhost:3000/auth/callback
                     </div>
-                    <div className="bg-white p-2 rounded border font-mono text-sm">
+                    <div className="bg-card p-2 rounded border font-mono text-sm">
                       https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
                     </div>
                   </div>

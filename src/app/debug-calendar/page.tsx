@@ -269,11 +269,11 @@ export default function DebugCalendarPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
-            <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading debug information...</p>
+            <RefreshCw className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading debug information...</p>
           </div>
         </div>
       </div>
@@ -281,13 +281,13 @@ export default function DebugCalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Calendar Debug</h1>
-            <p className="text-gray-600">Debug Google Calendar integration issues</p>
+            <h1 className="text-2xl font-bold text-foreground">Calendar Debug</h1>
+            <p className="text-muted-foreground">Debug Google Calendar integration issues</p>
           </div>
           <div className="flex space-x-2">
             <Button onClick={loadDebugInfo} variant="outline">
@@ -317,7 +317,7 @@ export default function DebugCalendarPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="font-medium">User ID:</span>
-                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">{userInfo.id}</code>
+                  <code className="text-sm bg-muted px-2 py-1 rounded">{userInfo.id}</code>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="font-medium">Provider:</span>
@@ -347,7 +347,7 @@ export default function DebugCalendarPage() {
                     {tokenInfo.access_token ? "Present" : "Missing"}
                   </Badge>
                   {tokenInfo.access_token && (
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-xs bg-muted px-2 py-1 rounded">
                       {tokenInfo.access_token.substring(0, 20)}...
                     </code>
                   )}
@@ -366,7 +366,7 @@ export default function DebugCalendarPage() {
                   <span className="font-medium">Scope:</span>
                   <div className="flex-1">
                     {tokenInfo.scope ? (
-                      <div className="text-sm bg-gray-100 p-2 rounded">
+                      <div className="text-sm bg-muted p-2 rounded">
                         {tokenInfo.scope.split(' ').map((scope, index) => (
                           <div key={index} className="flex items-center space-x-2">
                             <CheckCircle className="w-3 h-3 text-green-600" />
@@ -430,8 +430,8 @@ export default function DebugCalendarPage() {
                   </div>
                 )}
                 {calendarStatus.error && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded">
-                    <p className="text-red-800 text-sm">{calendarStatus.error}</p>
+                  <div className="p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                    <p className="text-red-800 dark:text-red-400 text-sm">{calendarStatus.error}</p>
                   </div>
                 )}
               </div>
@@ -483,7 +483,7 @@ export default function DebugCalendarPage() {
                     <h4 className="font-medium mb-2">Subscription Details:</h4>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
                       {subscriptionInfo.subscriptions.map((sub: any, index: number) => (
-                        <div key={index} className="text-xs bg-gray-100 p-2 rounded">
+                        <div key={index} className="text-xs bg-muted p-2 rounded">
                           <div><strong>{sub.name}</strong> - {sub.status}</div>
                           <div>Renewal: {sub.renewal_date || 'None'}</div>
                           <div>Calendar Event: {sub.calendar_event_id ? 'Yes' : 'No'}</div>
@@ -500,7 +500,7 @@ export default function DebugCalendarPage() {
                                 }}
                               />
                               {isCorruptedDate(sub.renewal_date) && (
-                                <div className="text-xs text-red-600 mt-1">
+                                <div className="text-xs text-red-600 dark:text-red-400 mt-1">
                                   ⚠️ Corrupted date detected
                                 </div>
                               )}
@@ -752,9 +752,9 @@ export default function DebugCalendarPage() {
             <CardDescription>Real-time debug information</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm max-h-64 overflow-y-auto">
+            <div className="bg-card text-green-400 dark:text-green-300 p-4 rounded-lg font-mono text-sm max-h-64 overflow-y-auto">
               {debugLogs.length === 0 ? (
-                <p className="text-gray-500">No debug logs yet. Try running some tests.</p>
+                <p className="text-muted-foreground">No debug logs yet. Try running some tests.</p>
               ) : (
                 debugLogs.map((log, index) => (
                   <div key={index} className="mb-1">

@@ -236,7 +236,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-10">
+              <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -247,8 +247,8 @@ export default function SettingsPage() {
                 </Button>
               </Link>
               <div className="flex items-center space-x-2">
-                <Settings className="w-6 h-6 text-slate-600" />
-                <h1 className="text-2xl font-bold text-slate-900">Account Settings</h1>
+                              <Settings className="w-6 h-6 text-muted-foreground" />
+              <h1 className="text-2xl font-bold text-foreground">Account Settings</h1>
               </div>
             </div>
             
@@ -300,9 +300,9 @@ export default function SettingsPage() {
                     id="email"
                     value={profileData.email}
                     disabled
-                    className="bg-slate-50"
+                    className="bg-muted"
                   />
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     Email cannot be changed. Contact support if needed.
                   </p>
                 </div>
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="show-amounts">Show Subscription Amounts</Label>
-                      <p className="text-sm text-slate-500">Display pricing information on cards</p>
+                      <p className="text-sm text-muted-foreground">Display pricing information on cards</p>
                     </div>
                     <Switch
                       id="show-amounts"
@@ -436,7 +436,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="auto-categorize">Auto-Categorize Subscriptions</Label>
-                      <p className="text-sm text-slate-500">Automatically assign categories to new subscriptions</p>
+                      <p className="text-sm text-muted-foreground">Automatically assign categories to new subscriptions</p>
                     </div>
                     <Switch
                       id="auto-categorize"
@@ -448,7 +448,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="compact-view">Compact View</Label>
-                      <p className="text-sm text-slate-500">Show more subscriptions with less detail</p>
+                      <p className="text-sm text-muted-foreground">Show more subscriptions with less detail</p>
                     </div>
                     <Switch
                       id="compact-view"
@@ -492,12 +492,12 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 
                 {/* Gmail Connection */}
-                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Mail className="w-8 h-8 text-red-500" />
                     <div>
                       <h3 className="font-medium">Gmail</h3>
-                      <p className="text-sm text-slate-500">Email parsing and subscription detection</p>
+                      <p className="text-sm text-muted-foreground">Email parsing and subscription detection</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -533,12 +533,12 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Calendar Connection */}
-                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Calendar className="w-8 h-8 text-blue-500" />
                     <div>
                       <h3 className="font-medium">Google Calendar</h3>
-                      <p className="text-sm text-slate-500">Automatic renewal reminders and events</p>
+                      <p className="text-sm text-muted-foreground">Automatic renewal reminders and events</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -558,7 +558,7 @@ export default function SettingsPage() {
                       </>
                     ) : (
                       <>
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground">
                           <XCircle className="w-3 h-3 mr-1" />
                           Disconnected
                         </Badge>
@@ -587,13 +587,13 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-slate-500">Member since</span>
+                    <span className="text-sm text-muted-foreground">Member since</span>
                     <span className="text-sm font-medium">
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-slate-500">Services connected</span>
+                    <span className="text-sm text-muted-foreground">Services connected</span>
                     <span className="text-sm font-medium">
                       {Object.values(connectedServices).filter(Boolean).length} of 2
                     </span>
@@ -646,22 +646,22 @@ export default function SettingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center space-x-2 mb-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
                     <span className="text-sm font-medium">Google OAuth</span>
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     Your account is secured with Google authentication
                   </p>
                 </div>
                 
-                <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center space-x-2 mb-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
                     <span className="text-sm font-medium">Data Encryption</span>
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     All data is encrypted at rest and in transit
                   </p>
                 </div>

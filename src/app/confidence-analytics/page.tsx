@@ -251,14 +251,14 @@ export default function ConfidenceAnalyticsPage() {
     })
   }
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.7) return 'bg-green-100 text-green-800 border-green-300'
-    if (confidence >= 0.4) return 'bg-yellow-100 text-yellow-800 border-yellow-300'
-    return 'bg-red-100 text-red-800 border-red-300'
+  const getConfidenceStyle = (confidence: number) => {
+    if (confidence >= 0.7) return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700'
+    if (confidence >= 0.4) return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700'
+    return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700'
   }
 
-  const getDecisionColor = (decision: string) => {
-    return decision === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+  const getDecisionStyle = (decision: string) => {
+    return decision === 'accepted' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
   }
 
   const filteredAnalyses = analyses.filter((analysis) => {
@@ -270,13 +270,13 @@ export default function ConfidenceAnalyticsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Confidence & Analytics</h1>
-          <p className="text-gray-600">Detailed analysis of email parsing decisions and AI reasoning</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Confidence & Analytics</h1>
+          <p className="text-muted-foreground">Detailed analysis of email parsing decisions and AI reasoning</p>
         </div>
 
         {/* Controls */}
@@ -286,7 +286,7 @@ export default function ConfidenceAnalyticsPage() {
               <Button 
                 onClick={runFullAnalysis} 
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {loading ? (
                   <>
@@ -303,7 +303,7 @@ export default function ConfidenceAnalyticsPage() {
 
               {analyses.length > 0 && (
                 <div className="flex items-center space-x-2">
-                  <Filter className="w-4 h-4 text-gray-500" />
+                  <Filter className="w-4 h-4 text-muted-foreground" />
                   <Button
                     variant={filterLevel === 'all' ? 'default' : 'outline'}
                     size="sm"
@@ -345,7 +345,7 @@ export default function ConfidenceAnalyticsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Emails</p>
+                    <p className="text-sm font-medium text-muted-foreground">Total Emails</p>
                     <p className="text-2xl font-bold">{stats.totalEmails}</p>
                   </div>
                   <Mail className="w-5 h-5 text-blue-600" />
@@ -357,7 +357,7 @@ export default function ConfidenceAnalyticsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Pre-filter Pass Rate</p>
+                    <p className="text-sm font-medium text-muted-foreground">Pre-filter Pass Rate</p>
                     <p className="text-2xl font-bold">{((stats.preFilterPassed / stats.totalEmails) * 100).toFixed(1)}%</p>
                   </div>
                   <CheckCircle className="w-5 h-5 text-green-600" />
@@ -369,7 +369,7 @@ export default function ConfidenceAnalyticsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Final Acceptance Rate</p>
+                    <p className="text-sm font-medium text-muted-foreground">Final Acceptance Rate</p>
                     <p className="text-2xl font-bold">{((stats.finalAccepted / stats.totalEmails) * 100).toFixed(1)}%</p>
                   </div>
                   <Target className="w-5 h-5 text-purple-600" />
@@ -381,7 +381,7 @@ export default function ConfidenceAnalyticsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Avg Processing Time</p>
+                    <p className="text-sm font-medium text-muted-foreground">Avg Processing Time</p>
                     <p className="text-2xl font-bold">{stats.avgProcessingTime.toFixed(0)}ms</p>
                   </div>
                   <TrendingUp className="w-5 h-5 text-orange-600" />
@@ -410,7 +410,7 @@ export default function ConfidenceAnalyticsPage() {
                   <div
                     key={index}
                     className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedEmail === analysis ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      selectedEmail === analysis ? 'border-blue-500 bg-blue-50' : 'border-border hover:border-border'
                     }`}
                     onClick={() => setSelectedEmail(analysis)}
                   >
@@ -419,14 +419,14 @@ export default function ConfidenceAnalyticsPage() {
                         <h4 className="font-medium text-sm truncate">
                           {analysis.email.subject}
                         </h4>
-                        <p className="text-xs text-gray-600 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {analysis.email.sender}
                         </p>
                         <div className="flex items-center space-x-2 mt-2">
-                          <Badge className={getConfidenceColor(analysis.finalConfidence)}>
+                          <Badge className={getConfidenceStyle(analysis.finalConfidence)}>
                             {(analysis.finalConfidence * 100).toFixed(1)}%
                           </Badge>
-                          <Badge className={getDecisionColor(analysis.finalDecision)}>
+                          <Badge className={getDecisionStyle(analysis.finalDecision)}>
                             {analysis.finalDecision}
                           </Badge>
                         </div>
@@ -441,7 +441,7 @@ export default function ConfidenceAnalyticsPage() {
                     </div>
                     
                     {analysis.rejectionReason && (
-                      <p className="text-xs text-red-600 mt-2 truncate">
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-2 truncate">
                         {analysis.rejectionReason}
                       </p>
                     )}
@@ -468,7 +468,7 @@ export default function ConfidenceAnalyticsPage() {
                   {/* Email Info */}
                   <div>
                     <h3 className="font-medium mb-2">Email Information</h3>
-                    <div className="bg-gray-50 p-3 rounded text-sm">
+                    <div className="bg-muted p-3 rounded text-sm">
                       <p><strong>Subject:</strong> {selectedEmail.email.subject}</p>
                       <p><strong>From:</strong> {selectedEmail.email.sender}</p>
                       <p><strong>Date:</strong> {new Date(selectedEmail.email.receivedAt).toLocaleDateString()}</p>
@@ -481,7 +481,7 @@ export default function ConfidenceAnalyticsPage() {
                     <div className="space-y-3">
                       
                       {/* Step 1: Pre-filter */}
-                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex items-center justify-between p-2 bg-muted rounded">
                         <div className="flex items-center space-x-2">
                           <div className={`w-3 h-3 rounded-full ${
                             selectedEmail.preFilterResult === 'passed' ? 'bg-green-500' : 'bg-red-500'
@@ -492,10 +492,10 @@ export default function ConfidenceAnalyticsPage() {
                           {selectedEmail.preFilterResult}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-600 ml-5">{selectedEmail.preFilterReason}</p>
+                      <p className="text-xs text-muted-foreground ml-5">{selectedEmail.preFilterReason}</p>
 
                       {/* Step 2: Confirmation Check */}
-                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex items-center justify-between p-2 bg-muted rounded">
                         <div className="flex items-center space-x-2">
                           <div className={`w-3 h-3 rounded-full ${
                             selectedEmail.confirmationCheck === 'passed' ? 'bg-green-500' : 'bg-red-500'
@@ -506,24 +506,24 @@ export default function ConfidenceAnalyticsPage() {
                           {selectedEmail.confirmationCheck}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-600 ml-5">{selectedEmail.confirmationReason}</p>
+                      <p className="text-xs text-muted-foreground ml-5">{selectedEmail.confirmationReason}</p>
 
                       {/* Step 3: AI Analysis */}
                       {selectedEmail.aiAnalysis && (
                         <>
-                          <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <div className="flex items-center justify-between p-2 bg-muted rounded">
                             <div className="flex items-center space-x-2">
                               <div className="w-3 h-3 rounded-full bg-blue-500" />
                               <span className="text-sm font-medium">AI Analysis</span>
                             </div>
-                            <Badge className={getConfidenceColor(selectedEmail.finalConfidence)}>
+                            <Badge className={getConfidenceStyle(selectedEmail.finalConfidence)}>
                               {(selectedEmail.finalConfidence * 100).toFixed(1)}%
                             </Badge>
                           </div>
                           
                           {/* AI Reasoning */}
                           <div className="ml-5 space-y-2">
-                            <div className="bg-blue-50 p-3 rounded text-sm">
+                            <div className="bg-primary/10 border border-primary/20 p-3 rounded text-sm">
                               <p><strong>Service:</strong> {selectedEmail.aiAnalysis.serviceName}</p>
                               <p><strong>Is Subscription:</strong> {selectedEmail.aiAnalysis.isSubscription ? 'Yes' : 'No'}</p>
                               <p><strong>Is Legitimate:</strong> {selectedEmail.aiAnalysis.isLegitimateService ? 'Yes' : 'No'}</p>
@@ -533,7 +533,7 @@ export default function ConfidenceAnalyticsPage() {
                               <div className="space-y-2">
                                 <h4 className="font-medium text-sm">AI Reasoning:</h4>
                                 {Object.entries(selectedEmail.aiAnalysis.reasoning).map(([key, value]) => (
-                                  <div key={key} className="bg-gray-50 p-2 rounded text-xs">
+                                  <div key={key} className="bg-muted p-2 rounded text-xs">
                                     <strong>{key}:</strong> {value as string}
                                   </div>
                                 ))}
@@ -543,7 +543,7 @@ export default function ConfidenceAnalyticsPage() {
                             {selectedEmail.aiAnalysis.concerns && selectedEmail.aiAnalysis.concerns.length > 0 && (
                               <div>
                                 <h4 className="font-medium text-sm">Concerns:</h4>
-                                <ul className="text-xs text-red-600 space-y-1">
+                                <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
                                   {selectedEmail.aiAnalysis.concerns.map((concern: string, idx: number) => (
                                     <li key={idx}>• {concern}</li>
                                   ))}
@@ -555,14 +555,14 @@ export default function ConfidenceAnalyticsPage() {
                       )}
 
                       {/* Final Decision */}
-                      <div className="flex items-center justify-between p-2 bg-gray-100 rounded border">
+                      <div className="flex items-center justify-between p-2 bg-muted rounded border">
                         <div className="flex items-center space-x-2">
                           <div className={`w-3 h-3 rounded-full ${
                             selectedEmail.finalDecision === 'accepted' ? 'bg-green-500' : 'bg-red-500'
                           }`} />
                           <span className="text-sm font-medium">Final Decision</span>
                         </div>
-                        <Badge className={getDecisionColor(selectedEmail.finalDecision)}>
+                        <Badge className={getDecisionStyle(selectedEmail.finalDecision)}>
                           {selectedEmail.finalDecision}
                         </Badge>
                       </div>
@@ -577,13 +577,13 @@ export default function ConfidenceAnalyticsPage() {
                         <span>Final Confidence Score</span>
                         <span className="font-medium">{(selectedEmail.finalConfidence * 100).toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2">
                         <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                          className="bg-primary h-2 rounded-full transition-all duration-300" 
                           style={{ width: `${selectedEmail.finalConfidence * 100}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs text-gray-500">
+                      <div className="flex justify-between text-xs text-muted-foreground">
                         <span>0%</span>
                         <span>50%</span>
                         <span>100%</span>
@@ -593,9 +593,9 @@ export default function ConfidenceAnalyticsPage() {
 
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
                   <div className="text-center">
-                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                     <p>Select an email to view detailed analysis</p>
                   </div>
                 </div>
@@ -623,7 +623,7 @@ export default function ConfidenceAnalyticsPage() {
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm">{reason.reason}</span>
                     <div className="flex items-center space-x-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div className="w-24 bg-muted rounded-full h-2">
                         <div 
                           className="bg-red-500 h-2 rounded-full" 
                           style={{ width: `${(reason.count / stats.totalEmails) * 100}%` }}

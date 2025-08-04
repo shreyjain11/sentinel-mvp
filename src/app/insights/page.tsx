@@ -217,13 +217,13 @@ export default function InsightsPage() {
   if (!analytics) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Dashboard</span>
               </Link>
@@ -231,9 +231,9 @@ export default function InsightsPage() {
             
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+                                  <Shield className="w-5 h-5 text-card-foreground" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Sentinel</span>
+              <span className="text-xl font-bold text-foreground">Sentinel</span>
             </div>
           </div>
         </div>
@@ -242,8 +242,8 @@ export default function InsightsPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Insights</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Insights</h1>
+          <p className="text-muted-foreground">
             Analyze your subscription spending and usage patterns
           </p>
         </div>
@@ -391,29 +391,29 @@ export default function InsightsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-green-500/10 dark:bg-green-900/20 border border-green-500/20 dark:border-green-800 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-3 h-3 bg-green-500 rounded-full" />
-                    <span className="font-medium text-green-900">Active Subscriptions</span>
+                    <span className="font-medium text-green-700 dark:text-green-300">Active Subscriptions</span>
                   </div>
-                  <div className="text-green-900 font-bold">{analytics.activeSubscriptions}</div>
+                  <div className="text-green-700 dark:text-green-300 font-bold">{analytics.activeSubscriptions}</div>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-orange-500/10 dark:bg-orange-900/20 border border-orange-500/20 dark:border-orange-800 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-3 h-3 bg-orange-500 rounded-full" />
-                    <span className="font-medium text-orange-900">Active Trials</span>
+                    <span className="font-medium text-orange-700 dark:text-orange-300">Active Trials</span>
                   </div>
-                  <div className="text-orange-900 font-bold">{analytics.trialSubscriptions}</div>
+                  <div className="text-orange-700 dark:text-orange-300 font-bold">{analytics.trialSubscriptions}</div>
                 </div>
 
                 {analytics.categoryBreakdown.length > 0 && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="mt-4 p-3 bg-blue-500/10 dark:bg-blue-900/20 border border-blue-500/20 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <Lightbulb className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">Top Category</span>
+                      <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Top Category</span>
                     </div>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-blue-600 dark:text-blue-400">
                       You spend the most on <strong>{analytics.categoryBreakdown[0].category}</strong> services 
                       ({formatCurrency(analytics.categoryBreakdown[0].amount)}/month)
                     </p>
@@ -437,28 +437,28 @@ export default function InsightsPage() {
             <CardContent>
               <div className="space-y-4">
                 {analytics.savingsOpportunities.totalPotentialSavings > 0 && (
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="p-3 bg-yellow-500/10 dark:bg-yellow-900/20 border border-yellow-500/20 dark:border-yellow-800 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <DollarSign className="w-4 h-4 text-yellow-600" />
-                      <span className="font-medium text-yellow-900">Potential Monthly Savings</span>
+                      <DollarSign className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                      <span className="font-medium text-yellow-700 dark:text-yellow-300">Potential Monthly Savings</span>
                     </div>
-                    <p className="text-lg font-bold text-yellow-900">
+                    <p className="text-lg font-bold text-yellow-700 dark:text-yellow-300">
                       {formatCurrency(analytics.savingsOpportunities.totalPotentialSavings)}
                     </p>
                   </div>
                 )}
 
                 {analytics.savingsOpportunities.expensiveServices.length > 0 && (
-                  <div className="p-3 bg-red-50 rounded-lg">
+                  <div className="p-3 bg-red-500/10 dark:bg-red-900/20 border border-red-500/20 dark:border-red-800 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <span className="text-sm font-medium text-red-900">Most Expensive Services</span>
+                      <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      <span className="text-sm font-medium text-red-700 dark:text-red-300">Most Expensive Services</span>
                     </div>
                     <div className="space-y-1">
                       {analytics.savingsOpportunities.expensiveServices.slice(0, 3).map(service => (
                         <div key={service.id} className="flex justify-between text-sm">
-                          <span className="text-red-700">{service.name}</span>
-                          <span className="font-medium text-red-900">
+                          <span className="text-red-600 dark:text-red-400">{service.name}</span>
+                          <span className="font-medium text-red-700 dark:text-red-300">
                             {formatCurrency(normalizeToMonthly(service.amount || 0, service.billing_cycle))}
                           </span>
                         </div>
@@ -468,14 +468,14 @@ export default function InsightsPage() {
                 )}
 
                 {analytics.savingsOpportunities.duplicateCategories.length > 0 && (
-                  <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="p-3 bg-blue-500/10 dark:bg-blue-900/20 border border-blue-500/20 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <BarChart3 className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">Duplicate Categories</span>
+                      <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Duplicate Categories</span>
                     </div>
                     <div className="space-y-1">
                       {analytics.savingsOpportunities.duplicateCategories.slice(0, 3).map(category => (
-                        <div key={category.category} className="text-sm text-blue-700">
+                        <div key={category.category} className="text-sm text-blue-600 dark:text-blue-400">
                           <strong>{category.services.length}</strong> {category.category} services 
                           ({formatCurrency(category.totalCost)}/month)
                         </div>
@@ -485,13 +485,13 @@ export default function InsightsPage() {
                 )}
 
                 {analytics.savingsOpportunities.unusedTrials.length > 0 && (
-                  <div className="p-3 bg-green-50 rounded-lg">
+                  <div className="p-3 bg-green-500/10 dark:bg-green-900/20 border border-green-500/20 dark:border-green-800 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-900">Active Trials</span>
+                      <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <span className="text-sm font-medium text-green-700 dark:text-green-300">Active Trials</span>
                     </div>
-                    <p className="text-sm text-green-700">
-                      You have <strong>{analytics.savingsOpportunities.unusedTrials.length}</strong> active trial{analytics.savingsOpportunities.unusedTrials.length !== 1 ? 's' : ''}. 
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      You have <strong>{analytics.savingsOpportunities.unusedTrials.length}</strong> active trial{analytics.savingsOpportunities.unusedTrials.length > 1 ? 's' : ''}. 
                       Remember to cancel before they convert to paid subscriptions!
                     </p>
                   </div>

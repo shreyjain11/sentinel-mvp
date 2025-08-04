@@ -55,11 +55,6 @@ export class NotificationService {
       trial_ending_enabled: true,
       renewal_reminder_enabled: true,
       price_change_enabled: true,
-      unused_subscription_enabled: false,
-      quiet_hours_enabled: false,
-      quiet_hours_start: '22:00',
-      quiet_hours_end: '08:00',
-      timezone: 'UTC',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
@@ -78,17 +73,13 @@ export class NotificationService {
         email_enabled: true,
         sms_enabled: false,
         push_enabled: false,
+        phone_number: null,
         verified_phone: false,
         trial_end_days_before: 3,
         renewal_days_before: 3,
         trial_ending_enabled: true,
         renewal_reminder_enabled: true,
-        price_change_enabled: true,
-        unused_subscription_enabled: false,
-        quiet_hours_enabled: false,
-        quiet_hours_start: '22:00',
-        quiet_hours_end: '08:00',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        price_change_enabled: true
       }
 
       const { data, error } = await supabase

@@ -105,9 +105,9 @@ export default function DebugEnvPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold">Environment Debug</h1>
+        <h1 className="text-3xl font-bold text-foreground">Environment Debug</h1>
         
         <Card>
           <CardHeader>
@@ -117,9 +117,9 @@ export default function DebugEnvPage() {
           <CardContent>
             <div className="space-y-2">
               {Object.entries(envInfo).map(([key, value]) => (
-                <div key={key} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                  <span className="font-mono text-sm">{key}:</span>
-                  <span className={`font-mono text-sm ${value === 'NOT SET' ? 'text-red-600' : 'text-green-600'}`}>
+                <div key={key} className="flex justify-between items-center p-2 bg-muted rounded">
+                  <span className="font-mono text-sm text-foreground">{key}:</span>
+                  <span className={`font-mono text-sm ${value === 'NOT SET' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                     {typeof value === 'string' && value.length > 50 ? `${value.substring(0, 50)}...` : String(value)}
                   </span>
                 </div>

@@ -95,7 +95,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSuccess, userI
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
@@ -112,7 +112,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSuccess, userI
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-900 flex items-center">
+              <h3 className="text-sm font-medium text-foreground flex items-center">
                 <Plus className="w-4 h-4 mr-2" />
                 Basic Information
               </h3>
@@ -183,7 +183,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSuccess, userI
 
             {/* Billing Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-900 flex items-center">
+              <h3 className="text-sm font-medium text-foreground flex items-center">
                 <DollarSign className="w-4 h-4 mr-2" />
                 Billing Information
               </h3>
@@ -243,7 +243,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSuccess, userI
 
             {/* Dates */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-900 flex items-center">
+              <h3 className="text-sm font-medium text-foreground flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
                 Important Dates
               </h3>
@@ -297,7 +297,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSuccess, userI
 
             {/* Additional Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-900 flex items-center">
+              <h3 className="text-sm font-medium text-foreground flex items-center">
                 <Globe className="w-4 h-4 mr-2" />
                 Additional Information
               </h3>

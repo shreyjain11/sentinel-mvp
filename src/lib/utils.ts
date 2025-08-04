@@ -31,13 +31,13 @@ export function getDaysUntil(date: string | Date): number {
 export function getStatusColor(status: string): string {
   switch (status) {
     case 'active':
-      return 'text-green-600 bg-green-50'
+      return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
     case 'expired':
-      return 'text-red-600 bg-red-50'
+      return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
     case 'cancelled':
-      return 'text-gray-600 bg-gray-50'
+      return 'text-muted-foreground bg-muted'
     default:
-      return 'text-gray-600 bg-gray-50'
+      return 'text-muted-foreground bg-muted'
   }
 }
 

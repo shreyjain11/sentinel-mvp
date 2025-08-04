@@ -66,10 +66,10 @@ export default function ReviewPage() {
 
   const getConfidenceColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-green-100 text-green-800 border-green-200'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'high': return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-800'
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
+      case 'low': return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-800'
+      default: return 'bg-muted text-muted-foreground border-border'
     }
   }
 
@@ -200,19 +200,19 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <header className="border-b bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Dashboard</span>
               </Link>
-              <div className="h-6 w-px bg-gray-300" />
+              <div className="h-6 w-px bg-border" />
               <div className="flex items-center space-x-2">
-                <Shield className="w-5 h-5 text-blue-600" />
-                <h1 className="text-xl font-bold text-gray-900">Review AI-Parsed Subscriptions</h1>
+                <Shield className="w-5 h-5 text-primary" />
+                <h1 className="text-xl font-bold text-foreground">Review AI-Parsed Subscriptions</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -227,34 +227,34 @@ export default function ReviewPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="bg-white rounded-lg p-6 border">
+          <div className="premium-card mb-6">
             <div className="flex items-start space-x-4 mb-6">
-              <Brain className="w-8 h-8 text-blue-600 mt-1" />
+              <Brain className="w-8 h-8 text-primary mt-1" />
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">AI Subscription Detection</h2>
-                <p className="text-gray-600 mb-4">
+                <h2 className="text-lg font-semibold text-card-foreground mb-2">AI Subscription Detection</h2>
+                <p className="text-muted-foreground mb-4">
                   Review subscriptions discovered by AI analysis of your email. Confirm accurate detections, 
                   reject false positives, or edit details before adding to your dashboard.
                 </p>
                 <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="font-medium text-green-900">High Confidence</div>
-                    <div className="text-green-600">≥70% accuracy</div>
-                    <div className="text-xl font-bold text-green-700">
+                  <div className="text-center p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="font-medium text-green-700 dark:text-green-300">High Confidence</div>
+                    <div className="text-green-600 dark:text-green-400">≥70% accuracy</div>
+                    <div className="text-xl font-bold text-green-700 dark:text-green-300">
                       {filteredSubscriptions.filter(s => getConfidenceLevel(s.confidence_score) === 'high').length}
                     </div>
                   </div>
-                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div className="font-medium text-yellow-900">Medium Confidence</div>
-                    <div className="text-yellow-600">40-70% accuracy</div>
-                    <div className="text-xl font-bold text-yellow-700">
+                  <div className="text-center p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <div className="font-medium text-yellow-700 dark:text-yellow-300">Medium Confidence</div>
+                    <div className="text-yellow-600 dark:text-yellow-400">40-70% accuracy</div>
+                    <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
                       {filteredSubscriptions.filter(s => getConfidenceLevel(s.confidence_score) === 'medium').length}
                     </div>
                   </div>
-                  <div className="text-center p-3 bg-red-50 rounded-lg">
-                    <div className="font-medium text-red-900">Low Confidence</div>
-                    <div className="text-red-600">&lt;40% accuracy</div>
-                    <div className="text-xl font-bold text-red-700">
+                  <div className="text-center p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div className="font-medium text-red-700 dark:text-red-300">Low Confidence</div>
+                    <div className="text-red-600 dark:text-red-400">&lt;40% accuracy</div>
+                    <div className="text-xl font-bold text-red-700 dark:text-red-300">
                       {filteredSubscriptions.filter(s => getConfidenceLevel(s.confidence_score) === 'low').length}
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export default function ReviewPage() {
                         )}
                         
                         {subscription.created_by === 'ai' && (
-                          <Badge className="flex items-center space-x-1 bg-purple-100 text-purple-800">
+                          <Badge className="flex items-center space-x-1 bg-purple-500/10 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-500/20">
                             <Brain className="w-3 h-3" />
                             <span>AI</span>
                           </Badge>
@@ -418,7 +418,7 @@ export default function ReviewPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-600">Pricing</Label>
+                                              <Label className="text-sm font-medium text-muted-foreground">Pricing</Label>
                       {subscription.isEditing ? (
                         <div className="space-y-2">
                           <Input
@@ -444,7 +444,7 @@ export default function ReviewPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-600">Billing Cycle</Label>
+                                              <Label className="text-sm font-medium text-muted-foreground">Billing Cycle</Label>
                       {subscription.isEditing ? (
                         <Select 
                           value={subscription.billing_cycle || ''} 
@@ -466,7 +466,7 @@ export default function ReviewPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-600">Next Billing</Label>
+                                              <Label className="text-sm font-medium text-muted-foreground">Next Billing</Label>
                       {subscription.isEditing ? (
                         <Input
                           type="date"
@@ -484,7 +484,7 @@ export default function ReviewPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-600">Status</Label>
+                                              <Label className="text-sm font-medium text-muted-foreground">Status</Label>
                       {subscription.isEditing ? (
                         <Select 
                           value={subscription.status || ''} 
@@ -542,11 +542,11 @@ export default function ReviewPage() {
                   )}
 
                   {subscription.created_by === 'ai' && subscription.parsed_data && (
-                    <details className="mt-6 p-4 border rounded-lg bg-gray-50">
-                      <summary className="cursor-pointer font-medium text-gray-900 mb-2">
+                    <details className="mt-6 p-4 border border-border rounded-lg bg-muted/30">
+                      <summary className="cursor-pointer font-medium text-card-foreground mb-2">
                         AI Parsing Details
                       </summary>
-                      <pre className="text-xs text-gray-600 overflow-x-auto">
+                      <pre className="text-xs text-muted-foreground overflow-x-auto">
                         {JSON.stringify(subscription.parsed_data, null, 2)}
                       </pre>
                     </details>

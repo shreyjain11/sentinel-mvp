@@ -148,7 +148,7 @@ export default function TestGmailOAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <Card>
           <CardHeader>
@@ -186,9 +186,9 @@ export default function TestGmailOAuthPage() {
 
             {/* OAuth URL Display */}
             {oauthUrl && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-medium text-blue-900 mb-2">Generated OAuth URL</h3>
-                <p className="text-sm text-blue-800 break-all">{oauthUrl}</p>
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <h3 className="font-medium text-card-foreground mb-2">Generated OAuth URL</h3>
+                <p className="text-sm text-muted-foreground break-all">{oauthUrl}</p>
                 <Button 
                   onClick={() => window.open(oauthUrl, '_blank')}
                   className="mt-2"
@@ -202,9 +202,9 @@ export default function TestGmailOAuthPage() {
             {/* Results */}
             <div className="space-y-4">
               <h3 className="font-medium">Test Results</h3>
-              <div className="max-h-96 overflow-y-auto bg-gray-100 rounded-lg p-4">
+              <div className="max-h-96 overflow-y-auto bg-muted rounded-lg p-4">
                 {results.length === 0 ? (
-                  <p className="text-gray-500">Run tests to see results...</p>
+                  <p className="text-muted-foreground">Run tests to see results...</p>
                 ) : (
                   <div className="space-y-1">
                     {results.map((result, index) => (
@@ -218,9 +218,9 @@ export default function TestGmailOAuthPage() {
             </div>
 
             {/* Troubleshooting Guide */}
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <h3 className="font-medium text-yellow-900 mb-2">Troubleshooting 401: invalid_client</h3>
-              <div className="text-sm text-yellow-800 space-y-2">
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <h3 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">Troubleshooting 401: invalid_client</h3>
+              <div className="text-sm text-yellow-800 dark:text-yellow-200 space-y-2">
                 <p><strong>1. Check Google Cloud Console:</strong></p>
                 <ul className="list-disc list-inside ml-4 space-y-1">
                   <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>

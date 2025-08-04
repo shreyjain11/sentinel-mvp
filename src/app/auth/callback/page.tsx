@@ -154,22 +154,22 @@ function AuthCallbackContent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             {message}
           </p>
           {status === 'processing' && (
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
             </div>
           )}
           {status === 'error' && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-muted-foreground mt-4">
                 You will be redirected to the login page in a few seconds...
               </p>
               <button 
                 onClick={() => router.push('/auth')}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-primary hover:underline"
               >
                 Return to login now
               </button>
@@ -177,7 +177,7 @@ function AuthCallbackContent() {
           )}
           {status === 'success' && (
             <div className="space-y-2">
-              <p className="text-xs text-green-600 mt-4">
+              <p className="text-xs text-green-600 dark:text-green-400 mt-4">
                 Redirecting to dashboard...
               </p>
             </div>
@@ -185,11 +185,11 @@ function AuthCallbackContent() {
           
           {/* Debug Info - Show in development or when there's an error */}
           {(process.env.NODE_ENV === 'development' || status === 'error') && debugInfo.length > 0 && (
-            <div className="mt-4 p-3 bg-gray-100 rounded text-left">
+            <div className="mt-4 p-3 bg-muted rounded text-left">
               <p className="text-xs font-semibold mb-2">Debug Info:</p>
               <div className="text-xs font-mono max-h-32 overflow-y-auto">
                 {debugInfo.map((info, index) => (
-                  <div key={index} className="mb-1 text-gray-700">{info}</div>
+                  <div key={index} className="mb-1 text-foreground">{info}</div>
                 ))}
               </div>
             </div>
@@ -216,11 +216,11 @@ export default function AuthCallbackPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Initializing authentication...
             </p>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '30%' }}></div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '30%' }}></div>
             </div>
           </CardContent>
         </Card>

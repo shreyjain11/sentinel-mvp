@@ -155,7 +155,7 @@ export default function TestDBPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <Card>
           <CardHeader>
@@ -183,9 +183,9 @@ export default function TestDBPage() {
               </Button>
             </div>
             
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto">
+            <div className="bg-card border border-border text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto">
               {results.length === 0 ? (
-                <div className="text-gray-500">Click "Run All Tests" to start...</div>
+                <div className="text-muted-foreground">Click "Run All Tests" to start...</div>
               ) : (
                 results.map((result, index) => (
                   <div key={index} className="mb-1">

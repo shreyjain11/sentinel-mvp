@@ -82,13 +82,13 @@ export default function TestApiPage() {
               <button 
                 onClick={testApiCall}
                 disabled={loading}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
               >
                 {loading ? 'Testing...' : 'Test API Call'}
               </button>
               <button 
                 onClick={forceRelogin}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                className="bg-destructive text-destructive-foreground px-4 py-2 rounded hover:bg-destructive/90"
               >
                 Force Re-login
               </button>

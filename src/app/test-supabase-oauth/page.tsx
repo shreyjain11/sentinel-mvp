@@ -52,11 +52,11 @@ export default function TestSupabaseOAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+            <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Supabase OAuth Test</h1>
-          <p className="text-gray-600">Testing if Supabase is overriding our redirect URL</p>
+                      <h1 className="text-3xl font-bold text-foreground mb-2">Supabase OAuth Test</h1>
+            <p className="text-muted-foreground">Testing if Supabase is overriding our redirect URL</p>
         </div>
 
         <div className="grid gap-6">
@@ -75,7 +75,7 @@ export default function TestSupabaseOAuthPage() {
               >
                 {isLoading ? 'Testing...' : 'Test OAuth with Hardcoded Redirect'}
               </Button>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 This will use the hardcoded URL: <code>https://sentinel-mvp.vercel.app/auth/callback</code>
               </p>
             </CardContent>
@@ -90,26 +90,26 @@ export default function TestSupabaseOAuthPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Host</label>
-                    <p className="text-sm text-gray-900">{debugInfo.host}</p>
+                    <label className="text-sm font-medium text-foreground">Host</label>
+                    <p className="text-sm text-foreground">{debugInfo.host}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Is Localhost</label>
+                    <label className="text-sm font-medium text-foreground">Is Localhost</label>
                     <Badge variant={debugInfo.isLocalhost ? "destructive" : "default"}>
                       {debugInfo.isLocalhost ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Environment Variable</label>
-                    <p className="text-sm text-gray-900 break-all">{debugInfo.envAppUrl || 'Not set'}</p>
+                    <label className="text-sm font-medium text-foreground">Environment Variable</label>
+                    <p className="text-sm text-foreground break-all">{debugInfo.envAppUrl || 'Not set'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Calculated Base URL</label>
-                    <p className="text-sm text-gray-900 break-all">{debugInfo.baseUrl}</p>
+                    <label className="text-sm font-medium text-foreground">Calculated Base URL</label>
+                    <p className="text-sm text-foreground break-all">{debugInfo.baseUrl}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Calculated Redirect To</label>
-                    <p className="text-sm text-gray-900 break-all">{debugInfo.redirectTo}</p>
+                    <label className="text-sm font-medium text-foreground">Calculated Redirect To</label>
+                    <p className="text-sm text-foreground break-all">{debugInfo.redirectTo}</p>
                   </div>
                 </div>
               </CardContent>

@@ -68,12 +68,6 @@ export interface NotificationPreferences {
   trial_ending_enabled: boolean
   renewal_reminder_enabled: boolean
   price_change_enabled: boolean
-  unused_subscription_enabled: boolean
-  // Advanced settings
-  quiet_hours_enabled: boolean
-  quiet_hours_start: string
-  quiet_hours_end: string
-  timezone: string
   created_at: string
   updated_at: string
 }
