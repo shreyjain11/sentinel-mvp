@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +12,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the authenticated user
-    const { data: { session } } = await supabase.auth.getSession()
+    // Get the authenticated user using server-side client
+    const supabase = createSupabaseServerClient(request)
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError)
+      return NextResponse.json(
+        { success: false, message: 'Session error' },
+        { status: 401 }
+      )
+    }
+    
     if (!session) {
       return NextResponse.json(
         { success: false, message: 'User not authenticated' },
@@ -42,12 +52,42 @@ export async function POST(request: NextRequest) {
       console.log('📧 [TEST] Subject: Sentinel Test Notification')
       console.log('📧 [TEST] Message: This is a test notification from Sentinel. Your notification settings are working correctly!')
       
-      // In production, you would use a service like SendGrid, Resend, or AWS SES
-      // For demo purposes, we'll just simulate success
-      return NextResponse.json({
-        success: true,
-        message: 'Test email sent successfully'
-      })
+      // Call the actual email sending endpoint
+      try {
+        const emailResponse = await fetch(`${request.nextUrl.origin}/api/notifications/send-email`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            to: session.user.email,
+            subject: 'Sentinel Test Notification',
+            message: 'This is a test notification from Sentinel. Your notification settings are working correctly!',
+            type: 'test'
+          })
+        })
+
+        const emailResult = await emailResponse.json()
+        
+        if (emailResult.success) {
+          return NextResponse.json({
+            success: true,
+            message: 'Test email sent successfully'
+          })
+        } else {
+          return NextResponse.json({
+            success: false,
+            message: emailResult.message || 'Failed to send test email'
+          }, { status: 500 })
+        }
+      } catch (emailError) {
+        console.error('Error sending test email:', emailError)
+        return NextResponse.json({
+          success: false,
+          message: 'Failed to send test email'
+        }, { status: 500 })
+      }
     }
 
     if (channel === 'sms') {

@@ -341,10 +341,50 @@ export class NotificationService {
    */
   static async sendEmailNotification(notification: ScheduledNotification): Promise<boolean> {
     try {
+      // Get user session to get email
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.error('No session found for email notification')
+        return false
+      }
+
+      // Determine email type and template data based on notification
+      let emailType = 'custom'
+      let templateData = null
+
+      if (notification.title.includes('trial') || notification.title.includes('Trial')) {
+        emailType = 'trial_ending'
+        templateData = {
+          serviceName: notification.title.replace(/trial|Trial|ending|Ending/gi, '').trim(),
+          daysLeft: 3, // Default, could be extracted from message
+          endDate: notification.scheduled_for
+        }
+      } else if (notification.title.includes('renewal') || notification.title.includes('Renewal')) {
+        emailType = 'renewal_reminder'
+        templateData = {
+          serviceName: notification.title.replace(/renewal|Renewal|reminder|Reminder/gi, '').trim(),
+          amount: '$9.99', // Default, could be extracted from message
+          renewalDate: notification.scheduled_for
+        }
+      } else if (notification.title.includes('price') || notification.title.includes('Price')) {
+        emailType = 'price_change'
+        templateData = {
+          serviceName: notification.title.replace(/price|Price|change|Change/gi, '').trim(),
+          oldPrice: '$9.99', // Default, could be extracted from message
+          newPrice: '$12.99' // Default, could be extracted from message
+        }
+      }
+
       const response = await fetch('/api/notifications/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notification)
+        body: JSON.stringify({
+          to: session.user.email,
+          subject: notification.title,
+          message: notification.message,
+          type: emailType,
+          templateData: templateData
+        })
       })
 
       const result = await response.json()

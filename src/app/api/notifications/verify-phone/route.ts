@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 // Type declaration for global verification codes
 declare global {
@@ -17,8 +17,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the authenticated user
-    const { data: { session } } = await supabase.auth.getSession()
+    // Get the authenticated user using server-side client
+    const supabase = createSupabaseServerClient(request)
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError)
+      return NextResponse.json(
+        { success: false, message: 'Session error' },
+        { status: 401 }
+      )
+    }
+    
     if (!session) {
       return NextResponse.json(
         { success: false, message: 'User not authenticated' },
@@ -28,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     // For MVP, simulate SMS verification (replace with Twilio in production)
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+    
     
     // In production, you would:
     // 1. Use Twilio to send the SMS
