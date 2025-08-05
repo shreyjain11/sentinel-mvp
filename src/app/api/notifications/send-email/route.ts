@@ -157,6 +157,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Debug environment variables
+    console.log('🔍 Email endpoint - Environment check:', {
+      hasGmailPassword: !!process.env.GMAIL_APP_PASSWORD,
+      gmailPasswordLength: process.env.GMAIL_APP_PASSWORD?.length || 0,
+      emailFrom: process.env.SENTINEL_EMAIL_FROM,
+      nodeEnv: process.env.NODE_ENV
+    })
+
     // Get the authenticated user using server-side client
     const supabase = createSupabaseServerClient(request)
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
@@ -178,9 +186,9 @@ export async function POST(request: NextRequest) {
 
     // Check if Gmail app password is configured
     if (!process.env.GMAIL_APP_PASSWORD) {
-      console.error('GMAIL_APP_PASSWORD not configured')
+      console.error('GMAIL_APP_PASSWORD not configured in email endpoint')
       return NextResponse.json(
-        { success: false, message: 'Email service not configured' },
+        { success: false, message: 'Email service not configured - GMAIL_APP_PASSWORD missing' },
         { status: 500 }
       )
     }

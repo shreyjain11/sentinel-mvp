@@ -52,6 +52,15 @@ export async function POST(request: NextRequest) {
       console.log('📧 [TEST] Subject: Sentinel Test Notification')
       console.log('📧 [TEST] Message: This is a test notification from Sentinel. Your notification settings are working correctly!')
       
+      // Check environment variables first
+      if (!process.env.GMAIL_APP_PASSWORD) {
+        console.error('GMAIL_APP_PASSWORD not configured in test endpoint')
+        return NextResponse.json({
+          success: false,
+          message: 'Email service not configured - GMAIL_APP_PASSWORD missing'
+        }, { status: 500 })
+      }
+      
       // Call the actual email sending endpoint
       try {
         const emailResponse = await fetch(`${request.nextUrl.origin}/api/notifications/send-email`, {
@@ -76,6 +85,7 @@ export async function POST(request: NextRequest) {
             message: 'Test email sent successfully'
           })
         } else {
+          console.error('Email endpoint returned error:', emailResult)
           return NextResponse.json({
             success: false,
             message: emailResult.message || 'Failed to send test email'
@@ -85,7 +95,7 @@ export async function POST(request: NextRequest) {
         console.error('Error sending test email:', emailError)
         return NextResponse.json({
           success: false,
-          message: 'Failed to send test email'
+          message: 'Failed to send test email - Network error'
         }, { status: 500 })
       }
     }
