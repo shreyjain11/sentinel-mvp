@@ -348,6 +348,16 @@ export class NotificationService {
         return false
       }
 
+      // Get user's notification preferences to find preferred email
+      const { data: preferences } = await supabase
+        .from('notification_preferences')
+        .select('notification_email')
+        .eq('user_id', session.user.id)
+        .single()
+
+      // Use preferred notification email or fall back to auth email
+      const notificationEmail = preferences?.notification_email || session.user.email
+
       // Determine email type and template data based on notification
       let emailType = 'custom'
       let templateData = null
@@ -379,7 +389,7 @@ export class NotificationService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: session.user.email,
+          to: notificationEmail,
           subject: notification.title,
           message: notification.message,
           type: emailType,

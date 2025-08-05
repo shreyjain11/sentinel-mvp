@@ -47,8 +47,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (channel === 'email') {
+      // Determine the email address to send to
+      const notificationEmail = preferences?.notification_email || session.user.email
+      
       // Test email notification
-      console.log(`📧 [TEST] Sending test email to ${session.user.email}`)
+      console.log(`📧 [TEST] Sending test email to ${notificationEmail} (user: ${session.user.email})`)
       console.log('📧 [TEST] Subject: Sentinel Test Notification')
       console.log('📧 [TEST] Message: This is a test notification from Sentinel. Your notification settings are working correctly!')
       
@@ -70,7 +73,7 @@ export async function POST(request: NextRequest) {
             'Cookie': request.headers.get('cookie') || ''
           },
           body: JSON.stringify({
-            to: session.user.email,
+            to: notificationEmail,
             subject: 'Sentinel Test Notification',
             message: 'This is a test notification from Sentinel. Your notification settings are working correctly!',
             type: 'test'
@@ -82,7 +85,7 @@ export async function POST(request: NextRequest) {
         if (emailResult.success) {
           return NextResponse.json({
             success: true,
-            message: 'Test email sent successfully'
+            message: `Test email sent successfully to ${notificationEmail}`
           })
         } else {
           console.error('Email endpoint returned error:', emailResult)
