@@ -383,6 +383,16 @@ export class NotificationService {
           oldPrice: '$9.99', // Default, could be extracted from message
           newPrice: '$12.99' // Default, could be extracted from message
         }
+      } else if (notification.title.includes('unused') || notification.title.includes('Unused')) {
+        emailType = 'unused_subscription'
+        templateData = {
+          serviceName: notification.title.replace(/unused|Unused|subscription|Subscription/gi, '').trim(),
+          lastUsed: '30 days ago', // Default, could be extracted from message
+          cost: '$9.99' // Default, could be extracted from message
+        }
+      } else if (notification.title.includes('welcome') || notification.title.includes('Welcome')) {
+        emailType = 'welcome'
+        templateData = null
       }
 
       const response = await fetch('/api/notifications/send-email', {
